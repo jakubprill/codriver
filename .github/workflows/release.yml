@@ -1,12 +1,13 @@
 name: Release
 
-# Wydanie nowej wersji:
-#   1. podbij "version" w package.json (np. 0.2.0) i zrób commit
-#   2. git tag v0.2.0 && git push --tags
-# GitHub zbuduje codriver.exe i dołączy go do strony Releases.
+# Wydanie nowej wersji – dwa sposoby:
+#   A. Na GitHubie: Actions → Release → „Run workflow” (wersja z package.json).
+#   B. Z konsoli: podbij "version" w package.json, commit, git tag v0.2.0 && git push --tags.
+# Automat zbuduje codriver.exe i dołączy go do strony Releases.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,14 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - name: Wersja z tagu musi zgadzać się z package.json
+      - name: Wersja
+        id: ver
         run: |
-          PKG=$(bun -e "console.log(require('./package.json').version)")
-          [ "v$PKG" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} ≠ package.json v$PKG"; exit 1; }
+          PKG=v$(bun -e "console.log(require('./package.json').version)")
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "$PKG" ]; then
+            echo "Tag ${GITHUB_REF_NAME} ≠ package.json $PKG"; exit 1
+          fi
+          if [ "${GITHUB_REF_TYPE}" != "tag" ] && gh release view "$PKG" >/dev/null 2>&1; then
+            echo "Wydanie $PKG już istnieje – podbij wersję w package.json"; exit 1
+          fi
+          echo "tag=$PKG" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: bun test
       - name: Kompilacja codriver.exe
         run: bun scripts/build.js --target=bun-windows-x64
       - name: Wydanie na GitHubie
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/codriver.exe --title "codriver ${GITHUB_REF_NAME}" --generate-notes
+        run: gh release create "${{ steps.ver.outputs.tag }}" dist/codriver.exe --target "${GITHUB_SHA}" --title "codriver ${{ steps.ver.outputs.tag }}" --generate-notes
