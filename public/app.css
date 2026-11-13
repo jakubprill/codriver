@@ -81,3 +81,10 @@ button { font: inherit; color: inherit; }
 .telemetry .fix.ok { color: #4cc38a; }
 .telemetry .fix a { color: var(--accent); }
 .telemetry code { font-size: 15px; color: var(--fg); word-break: break-all; }
+
+/* --- pasek stanu (tylko na komputerze) --- */
+.statusbar { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: baseline; margin-bottom: 20px; font-size: 20px; color: var(--muted); }
+.statusbar .brand { font-size: 26px; font-weight: 700; color: var(--fg); }
+.statusbar .ok { color: #4cc38a; font-weight: 600; }
+.statusbar .idle { color: var(--accent); }
+.statusbar.bad { color: #ec3a2c; }

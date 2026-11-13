@@ -33,8 +33,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - run: bun test
       - name: Kompilacja codriver.exe
-        run: bun scripts/build.js --target=bun-windows-x64
+        run: |
+          bun scripts/build.js --target=bun-windows-x64
+          mv dist/codriver.exe "dist/codriver-${{ steps.ver.outputs.tag }}.exe"
       - name: Wydanie na GitHubie
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.ver.outputs.tag }}" dist/codriver.exe --target "${GITHUB_SHA}" --title "codriver ${{ steps.ver.outputs.tag }}" --generate-notes
+        run: gh release create "${{ steps.ver.outputs.tag }}" "dist/codriver-${{ steps.ver.outputs.tag }}.exe" --target "${GITHUB_SHA}" --title "codriver ${{ steps.ver.outputs.tag }}" --generate-notes

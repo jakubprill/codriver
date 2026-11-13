@@ -2,7 +2,7 @@
 // codriver – telemetria z gry (UDP) -> dashboard w przeglądarce (SSE).
 // Działa na Node.js >= 18 i na Bun, bez żadnych zależności.
 //
-//   node src/main.js [--udp 20777] [--http 80] [--name codriver] [--open]
+//   node src/main.js [--udp 20777] [--http 80] [--name codriver] [--open | --no-open]
 //   node src/main.js --telemetry on|off|status   – telemetria w ustawieniach DiRT 3, bez startu serwera
 //   node src/main.js --launch-dirt3              – dodatkowo uruchamia poprawkę błędu 10038 i grę
 //
@@ -131,7 +131,9 @@ async function onListening() {
     console.log(qrTerminal(urls[0]));
   }
   console.log('\nStatus jest w tytule okna. Ctrl+C kończy.\n');
-  if (process.argv.includes('--open')) openBrowser(withPort('localhost'));
+  // plik .exe otwiera panel sam (dwuklik); z kodu – tylko z --open
+  const open = process.argv.includes('--open') || (assets && !process.argv.includes('--no-open'));
+  if (open) openBrowser(withPort('localhost'));
 }
 
 listen(HTTP_PORTS);

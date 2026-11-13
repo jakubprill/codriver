@@ -20,11 +20,14 @@ const store = {
 
 let stopCurrent = () => {};
 
+const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+
 function start() {
   const forced = findTheme(params.get('theme'));
   const saved = findTheme(store.get());
   if (forced) showDash(forced);
-  else if (saved && !params.has('pick')) showDash(saved);
+  // na komputerze z codriverem stroną startową jest panel (status, telefon, DiRT 3, wygląd)
+  else if (saved && !params.has('pick') && !isLocal) showDash(saved);
   else showPicker();
 }
 
@@ -51,7 +54,9 @@ function showPicker() {
 
   const connect = h('div');
   const telemetry = h('div');
+  const status = h('div');
   app.replaceChildren(h('section', { class: 'picker' },
+    status,
     connect,
     telemetry,
     h('h1', {}, 'Wybierz wyświetlacz'),
@@ -60,7 +65,9 @@ function showPicker() {
     h('p', { class: 'foot' }, 'Podgląd pokazuje dane przykładowe.')));
 
   // na komputerze z codriverem: kod QR dla telefonu
-  if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+  let stopStatus = () => {};
+  if (isLocal) {
+    stopStatus = showStatus(status);
     showConnect(connect);
     showTelemetry(telemetry);
   }
@@ -69,7 +76,31 @@ function showPicker() {
   const views = previews.map(({ preview, t }) => t.create(createStage(preview)));
   const step = createDemo();
   const timer = setInterval(() => { const f = step(); views.forEach((v) => v.update(f)); }, 1000 / 20);
-  stopCurrent = () => clearInterval(timer);
+  stopCurrent = () => { clearInterval(timer); stopStatus(); };
+}
+
+/** Pasek stanu na komputerze: wersja, czy płyną dane z gry, ile ekranów jest podłączonych. Odświeża się co 2 s. */
+function showStatus(slot) {
+  const render = async () => {
+    let st, info;
+    try {
+      [st, info] = await Promise.all([fetch('/status').then((r) => r.json()), fetch('/info').then((r) => r.json())]);
+    } catch {
+      slot.replaceChildren(h('div', { class: 'statusbar bad' }, 'Brak połączenia z serwerem codriver.'));
+      return;
+    }
+    const live = st.frame?.live;
+    const ago = st.lastPacketAgoMs == null ? null : Math.round(st.lastPacketAgoMs / 1000);
+    slot.replaceChildren(h('div', { class: 'statusbar' },
+      h('span', { class: 'brand' }, `codriver ${info.version ?? ''}`),
+      h('span', { class: live ? 'ok' : 'idle' },
+        live ? `Gra: dane płyną (${st.packets.toLocaleString('pl-PL')} pakietów)`
+          : ago == null ? 'Gra: brak danych – wystartuj odcinek' : `Gra: ostatnie dane ${ago} s temu`),
+      h('span', {}, `Podłączone ekrany: ${st.screens}`)));
+  };
+  render();
+  const t = setInterval(render, 2000);
+  return () => clearInterval(t);
 }
 
 // ---------- dashboard ----------
