@@ -19,8 +19,9 @@ const TYPES = {
  * @param {object} o
  * @param {string} o.publicDir  katalog z interfejsem (tryb deweloperski)
  * @param {Record<string,string>|null} o.assets  osadzone pliki: ścieżka URL -> ścieżka w pliku .exe
+ * @param {() => object} [o.info]  adresy w sieci do wyświetlenia (kod QR)
  */
-export function createHttpServer({ publicDir, assets = null, state, sendHz = 30 }) {
+export function createHttpServer({ publicDir, assets = null, state, info = () => ({}), sendHz = 30 }) {
   const clients = new Set();
   const root = path.resolve(publicDir);
 
@@ -36,6 +37,12 @@ export function createHttpServer({ publicDir, assets = null, state, sendHz = 30 
       res.write('retry: 1000\n\n');
       clients.add(res);
       req.on('close', () => clients.delete(res));
+      return;
+    }
+
+    if (url.pathname === '/info') {
+      res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-cache' });
+      res.end(JSON.stringify(info()));
       return;
     }
 

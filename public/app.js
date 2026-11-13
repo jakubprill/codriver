@@ -6,6 +6,7 @@ import { h } from './lib/util.js';
 import { createStage } from './lib/stage.js';
 import { createDemo } from './lib/demo.js';
 import { themes, findTheme } from './themes/index.js';
+import { qrSvg } from './lib/qr.js';
 
 const KEY = 'codriver.theme';
 const app = document.getElementById('app');
@@ -48,11 +49,16 @@ function showPicker() {
     return card;
   });
 
+  const connect = h('div');
   app.replaceChildren(h('section', { class: 'picker' },
+    connect,
     h('h1', {}, 'Wybierz wyświetlacz'),
     h('p', { class: 'lead' }, 'Każde urządzenie zapamięta swój wybór. Zmienisz go w każdej chwili przyciskiem w rogu dashboardu.'),
     h('div', { class: 'grid' }, cards),
     h('p', { class: 'foot' }, 'Podgląd pokazuje dane przykładowe.')));
+
+  // na komputerze z codriverem: kod QR dla telefonu
+  if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) showConnect(connect);
 
   // podglądy rysują się na żywo danymi pokazowymi
   const views = previews.map(({ preview, t }) => t.create(createStage(preview)));
@@ -108,6 +114,23 @@ function showDash(theme) {
     cleanup = () => es.close();
   }
   stopCurrent = () => { cleanup(); clearTimeout(hideTimer); };
+}
+
+async function showConnect(slot) {
+  let info;
+  try { info = await (await fetch('/info')).json(); } catch { return; }
+  const url = info.urls?.[0];
+  if (!url) return;
+  const qr = h('div', { class: 'qr', role: 'img', 'aria-label': `Kod QR z adresem ${url}` });
+  qr.innerHTML = qrSvg(url, { margin: 2 });
+  slot.replaceChildren(h('div', { class: 'connect' },
+    qr,
+    h('div', {},
+      h('h2', {}, 'Podłącz telefon albo tablet'),
+      h('p', {}, 'Zeskanuj kod aparatem albo wpisz w przeglądarce:'),
+      info.name ? h('p', { class: 'addr' }, info.name) : null,
+      h('p', { class: info.name ? 'addr alt' : 'addr' }, url),
+      h('p', { class: 'hint' }, 'Urządzenie musi być w tej samej sieci Wi-Fi co ten komputer.'))));
 }
 
 function goFullscreen() {

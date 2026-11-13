@@ -2,15 +2,18 @@
 // codriver – telemetria z gry (UDP) -> dashboard w przeglądarce (SSE).
 // Działa na Node.js >= 18 i na Bun, bez żadnych zależności.
 //
-//   node src/main.js [--udp 20777] [--http 8080] [--open]
+//   node src/main.js [--udp 20777] [--http 80] [--name codriver] [--open]
+//
+// Bez --http próbuje portu 80 (adres bez numeru: http://codriver.local), a gdy jest zajęty – 8080.
 import dgram from 'node:dgram';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import codemasters from './games/codemasters.js';
 import { TelemetryState } from './telemetry.js';
 import { createHttpServer } from './server/http.js';
+import { startMdns, lanInterfaces } from './server/mdns.js';
+import { qrTerminal } from '../public/lib/qr.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 // eslint-disable-next-line no-undef
@@ -32,7 +35,8 @@ function arg(name, fallback) {
 
 const game = codemasters;
 const UDP_PORT = Number(arg('udp', game.defaultPort));
-const HTTP_PORT = Number(arg('http', 8080));
+const HTTP_PORTS = arg('http') ? [Number(arg('http'))] : [80, 8080];
+const HOSTNAME = `${arg('name', 'codriver')}.local`;
 
 const state = new TelemetryState();
 
@@ -52,20 +56,47 @@ udp.on('error', (e) => {
 });
 udp.bind(UDP_PORT, '0.0.0.0');
 
+// --- adresy dla telefonu ---
+let httpPort = HTTP_PORTS[0];
+let mdns = { ok: false };
+const withPort = (host) => `http://${host}${httpPort === 80 ? '' : `:${httpPort}`}`;
+/** Adresy, pod którymi widać codriver w sieci. IP najpierw – działa na każdym telefonie. */
+function addresses() {
+  const ips = lanInterfaces().map((i) => withPort(i.address));
+  return { urls: ips, name: mdns.ok ? withPort(HOSTNAME) : null, version: VERSION };
+}
+
 // --- HTTP ---
-const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state });
-server.on('error', (e) => {
-  if (e.code === 'EADDRINUSE') console.error(`\nPort HTTP ${HTTP_PORT} jest zajęty – codriver chyba już działa.\n`);
-  else console.error('Błąd HTTP:', e);
-  process.exit(1);
-});
-server.listen(HTTP_PORT, '0.0.0.0', () => {
-  console.log(`codriver ${VERSION} – ${game.name}: UDP :${UDP_PORT} -> http :${HTTP_PORT}\n`);
-  console.log(`  Ten komputer:    http://localhost:${HTTP_PORT}`);
-  for (const addr of lanAddresses()) console.log(`  Telefon/tablet:  http://${addr}:${HTTP_PORT}`);
+const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state, info: addresses });
+
+function listen(ports) {
+  const [port, ...rest] = ports;
+  httpPort = port;
+  server.once('error', (e) => {
+    if ((e.code === 'EADDRINUSE' || e.code === 'EACCES') && rest.length) return listen(rest);
+    if (e.code === 'EADDRINUSE') console.error(`\nPort HTTP ${port} jest zajęty – codriver chyba już działa.\n`);
+    else console.error('Błąd HTTP:', e);
+    process.exit(1);
+  });
+  server.listen(port, '0.0.0.0', onListening);
+}
+
+async function onListening() {
+  mdns = await startMdns(HOSTNAME);
+  const { urls, name } = addresses();
+  console.log(`codriver ${VERSION} – ${game.name}: UDP :${UDP_PORT} -> http :${httpPort}\n`);
+  console.log(`  Ten komputer:    ${withPort('localhost')}`);
+  if (name) console.log(`  Telefon/tablet:  ${name}`);
+  for (const u of urls) console.log(`  ${name ? 'albo:           ' : 'Telefon/tablet: '} ${u}`);
+  if (urls[0]) {
+    console.log('\nZeskanuj aparatem telefonu:\n');
+    console.log(qrTerminal(urls[0]));
+  }
   console.log('\nStatus jest w tytule okna. Ctrl+C kończy.\n');
-  if (process.argv.includes('--open')) openBrowser(`http://localhost:${HTTP_PORT}`);
-});
+  if (process.argv.includes('--open')) openBrowser(withPort('localhost'));
+}
+
+listen(HTTP_PORTS);
 
 function openBrowser(url) {
   const cmd = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]]
@@ -80,11 +111,3 @@ setInterval(() => {
   const ago = s.lastPacketAgoMs == null ? 'brak' : `${Math.round(s.lastPacketAgoMs / 1000)} s temu`;
   process.title = `codriver | pakiety: ${s.packets} | ostatni: ${ago} | ekrany: ${clients.size}`;
 }, 1000);
-
-function lanAddresses() {
-  const out = [];
-  for (const list of Object.values(os.networkInterfaces())) {
-    for (const a of list || []) if (a.family === 'IPv4' && !a.internal) out.push(a.address);
-  }
-  return out;
-}

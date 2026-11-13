@@ -22,9 +22,11 @@ Działa z **DiRT 3**. **DiRT Rally** ma ten sam format telemetrii – wsparcie c
 2. **Uruchom codriver** na tym samym komputerze:
    pobierz `codriver.exe` z [Releases](https://github.com/jakubprill/codriver/releases),
    albo z kodu: `bun src/main.js` (lub `node src/main.js`, Node 18+).
-3. **Otwórz adres z okna codriver** w przeglądarce telefonu, np. `http://192.168.1.20:8080`.
-   Telefon musi być w tej samej sieci Wi-Fi; przy pytaniu zapory zezwól dla sieci prywatnej.
-   Dane pojawiają się po starcie odcinka.
+3. **Podłącz telefon:** zeskanuj kod QR z okna codriver (albo ze strony, która otworzy się na komputerze)
+   lub wpisz **`http://codriver.local`**. Telefon musi być w tej samej sieci Wi-Fi;
+   przy pytaniu zapory zezwól dla sieci prywatnej. Dane pojawiają się po starcie odcinka.
+
+   `codriver.local` działa na iPhonie, iPadzie i komputerach; na części Androidów trzeba użyć adresu IP z kodu QR.
 
 Bez gry: `bun run replay` odtwarza nagranie z jazdy, a `http://localhost:8080/?demo` pokazuje dane przykładowe.
 

@@ -25,13 +25,17 @@ const files = [];
   }
 })(publicDir);
 
-// 2. moduł z osadzonymi plikami
+// 2. kopia interfejsu (serwer importuje public/lib/qr.js jako moduł, więc osadzamy kopię,
+//    żeby bundler nie pomylił tego samego pliku jako kodu i jako zasobu) + moduł z osadzonymi plikami
+const copyDir = path.join(root, 'dist', '.assets');
+fs.rmSync(copyDir, { recursive: true, force: true });
+fs.cpSync(publicDir, copyDir, { recursive: true });
 const genPath = path.join(root, 'src', 'assets.gen.js');
 const lines = ['// Wygenerowane przez scripts/build.js – nie edytuj, nie commituj.'];
 const entries = [];
 files.forEach((f, i) => {
   const rel = '/' + path.relative(publicDir, f).split(path.sep).join('/');
-  const imp = path.relative(path.dirname(genPath), f).split(path.sep).join('/');
+  const imp = path.relative(path.dirname(genPath), path.join(copyDir, path.relative(publicDir, f))).split(path.sep).join('/');
   lines.push(`import a${i} from '${imp.startsWith('.') ? imp : './' + imp}' with { type: 'file' };`);
   entries.push(`  ${JSON.stringify(rel)}: a${i},`);
 });
@@ -55,4 +59,5 @@ try {
   console.log(`codriver ${pkg.version}: ${path.relative(root, outfile)} (${size} MB, ${files.length} plików interfejsu w środku)`);
 } finally {
   fs.rmSync(genPath, { force: true });
+  fs.rmSync(copyDir, { recursive: true, force: true });
 }
