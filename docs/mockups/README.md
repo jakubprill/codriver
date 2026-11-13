@@ -1,16 +1,16 @@
-# Makiety
+# Mockups
 
-Pierwsze propozycje wyglądu (13.11.2026), zrobione na płótnie projektowym w Claude:
+The first design proposals (2026-11-13), made on a Claude design canvas:
 https://claude.ai/artifact/Pz8XmYx3AyuoECnrD39tKu
 
-| Plik | Wariant | W aplikacji |
+| File | Variant | In the app |
 |---|---|---|
-| `Main.dc.html` | A – Odcinek, rajdowy cyfrowy (wybrany jako główny) | `public/themes/odcinek.js` |
-| `Zegary.dc.html` | B – Zegary, analogowe tarcze | `public/themes/zegary.js` |
-| `Kierownica.dc.html` | C – Kokpit, wyświetlacz z kierownicy | `public/themes/kokpit.js` |
-| `Neon.dc.html` | D – Neon, tylko najważniejsze | `public/themes/neon.js` |
+| `Main.dc.html` | A – Odcinek (stage), rally digital – chosen as the main look | `public/themes/odcinek.js` |
+| `Zegary.dc.html` | B – Zegary (gauges), analog dials | `public/themes/zegary.js` |
+| `Kierownica.dc.html` | C – Kokpit (cockpit), steering-wheel display | `public/themes/kokpit.js` |
+| `Neon.dc.html` | D – Neon, essentials only | `public/themes/neon.js` |
 
-Warianty E (Papier) i F (LCD) powstały od razu w kodzie – ich wygląd jest w `docs/screens/`.
+Variants E (Papier – paper) and F (LCD) were designed directly in code – see `docs/screens/`.
 
-Pliki `.dc.html` to źródła artboardów płótna (format Design Component); otwierają się poprawnie na płótnie,
-nie samodzielnie w przeglądarce. Aktualny wygląd każdego wariantu: `docs/screens/*.png`.
+The `.dc.html` files are design-canvas artboard sources (Design Component format); they render on the canvas,
+not on their own in a browser. The current look of every variant: `docs/screens/*.png`.

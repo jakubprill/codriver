@@ -1,10 +1,13 @@
-# codriver – wskazówki dla agentów
+# codriver – notes for agents
 
-- Język: dokumentacja, komentarze, komunikaty i interfejs po polsku. Nazwy w kodzie po angielsku.
-- Zero zależności npm. Tylko moduły `node:*`; kod musi działać na Bun i Node 18+ (`node --test` i `bun test` przechodzą).
-- Architektura i jak dodać grę lub wygląd: `docs/architecture.md`. Mapa pól telemetrii: `docs/telemetry/`.
-- Serwer nie pisze do konsoli w pętli (status idzie do `process.title`) – klik w konsolę Windows zamraża proces.
-- Motywy rysują na planszy 1600×800; strefy obrotów tylko z `ZONES`/`rpmInfo()` w `public/lib/util.js`.
-- Każdy nowy wygląd: wpis w `public/themes/index.js` i zrzut `docs/screens/<id>.png` (`?demo&theme=<id>`).
-- Nowe pole telemetrii: najpierw nagranie i test w `test/` na danych z gry, potem kod.
-- Przed commitem: `bun test` (albo `node --test`) i `bun scripts/build.js`.
+- Language: all documentation (README, `docs/`, ADRs, this file) and commit messages are in English.
+  The user interface is in Polish for now. Code identifiers are in English.
+- Zero npm dependencies. `node:*` modules only; the code must run on Bun and Node 18+ (`node --test` and `bun test` pass).
+- Architecture and how to add a game or a look: `docs/architecture.md`. Telemetry field maps: `docs/telemetry/`.
+- The server never writes to the console in a loop (status goes to `process.title`) – clicking into a Windows console freezes the process.
+- Themes draw on a 1600×800 stage; RPM zones come only from `ZONES`/`rpmInfo()` in `public/lib/util.js`.
+- Every new look: an entry in `public/themes/index.js` and a screenshot `docs/screens/<id>.png` (`?demo&theme=<id>`).
+- New telemetry field: record a drive and write a test in `test/` against game data first, then the code.
+- Endpoints that change game settings or launch programs accept requests from the same machine only (`isLoopback` in `src/server/http.js`).
+- Before committing: `bun test` (or `node --test`) and `bun scripts/build.js`.
+- Releases: bump `version` in `package.json`, then Actions → Release → Run workflow; the asset is `codriver-vX.Y.Z.exe`.
