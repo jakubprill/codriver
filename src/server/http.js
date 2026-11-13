@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as dirt3Config from '../games/dirt3-config.js';
 import * as dirt3Launcher from '../games/dirt3-launcher.js';
+import { lanInterfaces } from './mdns.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -56,7 +57,7 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
 
     if (url.pathname === '/info') {
       res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-cache' });
-      res.end(JSON.stringify(info()));
+      res.end(JSON.stringify({ ...info(), local: isLoopback(req.socket.remoteAddress) }));
       return;
     }
 
@@ -97,7 +98,15 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
   return { server, clients };
 }
 
-const isLoopback = (addr = '') => addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+/**
+ * Czy żądanie przyszło z tego samego komputera – także gdy strona jest otwarta przez adres IP
+ * albo codriver.local (wtedy adres nadawcy to własny adres karty sieciowej, a nie 127.0.0.1).
+ */
+function isLoopback(addr = '') {
+  const a = addr.replace(/^::ffff:/, '');
+  if (a === '127.0.0.1' || a === '::1') return true;
+  return lanInterfaces().some((i) => i.address === a);
+}
 
 function sendJson(res, code, body) {
   res.writeHead(code, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-cache' });

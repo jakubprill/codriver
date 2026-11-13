@@ -20,9 +20,14 @@ const store = {
 
 let stopCurrent = () => {};
 
-const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+// Czy strona jest otwarta na komputerze z codriverem. Adres (localhost/IP/codriver.local) nie wystarcza –
+// pytamy serwer, który widzi, skąd przyszło żądanie.
+let isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 
-function start() {
+async function start() {
+  if (!isLocal) {
+    try { isLocal = !!(await (await fetch('/info')).json()).local; } catch { /* serwer niedostępny */ }
+  }
   const forced = findTheme(params.get('theme'));
   const saved = findTheme(store.get());
   if (forced) showDash(forced);
