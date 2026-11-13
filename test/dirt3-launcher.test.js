@@ -1,4 +1,4 @@
-// Uruchamianie DiRT 3: kolejność kroków i wyszukiwanie poprawki (bez prawdziwego uruchamiania programów).
+// Launching DiRT 3: order of steps and finding the fix (without actually starting programs).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -21,7 +21,7 @@ function sandbox({ withFix }) {
   return { dir, configFile, calls, spawn };
 }
 
-test('z poprawką: telemetria włączona, najpierw poprawka, potem gra przez Steam', () => {
+test('with the fix: telemetry on, the fix first, then the game via Steam', () => {
   const { dir, configFile, calls, spawn } = sandbox({ withFix: true });
   const r = launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile });
   assert.equal(r.telemetry.enabled, true);
@@ -33,7 +33,7 @@ test('z poprawką: telemetria włączona, najpierw poprawka, potem gra przez Ste
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test('bez poprawki gra i tak startuje', () => {
+test('without the fix the game still starts', () => {
   const { dir, configFile, calls, spawn } = sandbox({ withFix: false });
   const r = launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile });
   assert.equal(r.fix, null);
@@ -41,14 +41,14 @@ test('bez poprawki gra i tak startuje', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test('poza Windowsem jest czytelny błąd', () => {
-  assert.throws(() => launchDirt3({ appDir: '.', platform: 'linux', spawn: () => ({ unref() {} }), configFile: null }), /Windowsie/);
+test('outside Windows there is a clear error', () => {
+  assert.throws(() => launchDirt3({ appDir: '.', platform: 'linux', spawn: () => ({ unref() {} }), configFile: null }), /only works on Windows/);
 });
 
-test('ścieżka z CODRIVER_DIRT3_FIX ma pierwszeństwo', () => {
+test('the CODRIVER_DIRT3_FIX path takes precedence', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codriver-fix-'));
   const exe = path.join(dir, FIX_EXE);
   fs.writeFileSync(exe, '');
-  assert.equal(findFix('/nie/istnieje', { CODRIVER_DIRT3_FIX: dir }), exe);
+  assert.equal(findFix('/does/not/exist', { CODRIVER_DIRT3_FIX: dir }), exe);
   fs.rmSync(dir, { recursive: true, force: true });
 });

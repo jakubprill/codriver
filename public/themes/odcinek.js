@@ -1,5 +1,5 @@
-// A · Odcinek – rajdowy cyfrowy. Łuk z ukośnych segmentów nad całym ekranem
-// jest zarazem obrotomierzem i lampkami zmiany biegu.
+// A · Stage (id: odcinek) – rally digital. An arc of slanted segments across the screen
+// is both the tachometer and the shift lights.
 import { h, s, useFont, useStyle, rpmInfo, gearText, fmtTime, fmtInt, fmtG, clamp, blinkOn, ZONES } from '../lib/util.js';
 
 const C = { night: '#0d1418', carbon: '#172126', gravel: '#7d8c92', chalk: '#ece8de', amber: '#f4a81d', red: '#ec3a2c', green: '#4cc38a', blue: '#3b86ff' };
@@ -30,8 +30,8 @@ const pt = (r, a) => [CX + r * Math.sin(a), CY - r * Math.cos(a)];
 
 export default {
   id: 'odcinek',
-  name: 'Odcinek',
-  description: 'Rajdowy cyfrowy: łuk obrotów nad ogromnym biegiem',
+  name: 'Stage',
+  description: 'Rally digital: an RPM arc over a huge gear number',
   create(stage) {
     useFont('Barlow+Condensed:wght@400;600;700');
     useStyle('odcinek', CSS);
@@ -66,21 +66,21 @@ export default {
     const speed = h('div', { class: 'num' }, '0');
     const rpm = h('div', { class: 'num' }, '0');
     const gear = h('div', { class: 'gear' }, '–');
-    const lt = h('b', {}, '0:00,0');
+    const lt = h('b', {}, '0:00.0');
     const dist = h('b', {}, '0 m');
-    const gval = h('b', {}, '0,0 g');
+    const gval = h('b', {}, '0.0 g');
     const status = h('div', { class: 'status' });
 
     const root = h('div', { class: 't-odcinek idle' },
       tach,
-      h('div', { class: 'pedal', style: 'left:40px', title: 'hamulec' }, brk),
-      h('div', { class: 'pedal', style: 'right:40px', title: 'gaz' }, thr),
+      h('div', { class: 'pedal', style: 'left:40px', title: 'brake' }, brk),
+      h('div', { class: 'pedal', style: 'right:40px', title: 'throttle' }, thr),
       h('div', { class: 'ro l' }, speed, h('div', { class: 'unit' }, 'km/h')),
       gear,
-      h('div', { class: 'ro r' }, rpm, h('div', { class: 'unit' }, 'obr/min')),
+      h('div', { class: 'ro r' }, rpm, h('div', { class: 'unit' }, 'rpm')),
       status,
       h('div', { class: 'strip' },
-        h('span', {}, 'czas', lt), h('span', {}, 'dystans', dist), h('span', {}, 'przeciążenie', gval)),
+        h('span', {}, 'time', lt), h('span', {}, 'distance', dist), h('span', {}, 'g-force', gval)),
     );
     stage.append(root);
 

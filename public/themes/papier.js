@@ -1,5 +1,5 @@
-// E · Papier – jasny wyświetlacz jak trójkolorowy e-papier: czarny tusz, czerwień na odcięciu,
-// kreskowanie zamiast poświaty. Bez migania – e-papier nie miga.
+// E · Paper (id: papier) – a light display like three-colour e-paper: black ink, red at the limiter,
+// hatching instead of glow. No blinking – e-paper doesn't blink.
 import { h, s, useFont, useStyle, rpmInfo, gearText, fmtTime, fmtInt, fmtG, clamp, ZONES } from '../lib/util.js';
 
 const C = { paper: '#e6e2d6', ink: '#161616', grey: '#8d887c', faint: '#cdc8ba', red: '#b3261e' };
@@ -26,8 +26,8 @@ const W = 1440, BAR_H = 96;
 
 export default {
   id: 'papier',
-  name: 'Papier',
-  description: 'Jasny jak e-papier: czarny tusz, czerwień na odcięciu',
+  name: 'Paper',
+  description: 'Light like e-paper: black ink, red at the limiter',
   create(stage) {
     useFont('IBM+Plex+Sans+Condensed:ital,wght@0,400;0,600;1,400');
     useStyle('papier', CSS);
@@ -59,16 +59,16 @@ export default {
           ticks.append(s('line', { x1: xq, y1: BAR_H, x2: xq, y2: BAR_H + 10, stroke: C.grey, 'stroke-width': 2 }));
         }
       }
-      ticks.append(s('text', { x: W, y: BAR_H + 56, dy: 40, 'font-size': 24, fill: C.grey, 'text-anchor': 'end', 'font-style': 'italic' }, '× 1000 obr/min'));
+      ticks.append(s('text', { x: W, y: BAR_H + 56, dy: 40, 'font-size': 24, fill: C.grey, 'text-anchor': 'end', 'font-style': 'italic' }, '× 1000 rpm'));
     };
     drawTicks(7000);
 
     const speed = h('div', { class: 'num' }, '0');
     const rpm = h('div', { class: 'num', style: 'font-size:150px' }, '0');
     const gear = h('div', { class: 'gearbox' }, '–');
-    const lt = h('b', {}, '0:00,0');
+    const lt = h('b', {}, '0:00.0');
     const dist = h('b', {}, '0 m');
-    const gval = h('b', {}, '0,0 g');
+    const gval = h('b', {}, '0.0 g');
     const thr = h('i', { style: 'width:0' });
     const brk = h('i', { style: `width:0;background:${C.red}` });
     const status = h('div', { class: 'status' });
@@ -77,13 +77,13 @@ export default {
       tach,
       h('div', { class: 'ro', style: 'left:80px' }, speed, h('div', { class: 'unit' }, 'km/h')),
       gear,
-      h('div', { class: 'ro', style: 'right:80px;text-align:right;top:340px' }, rpm, h('div', { class: 'unit' }, 'obr/min')),
+      h('div', { class: 'ro', style: 'right:80px;text-align:right;top:340px' }, rpm, h('div', { class: 'unit' }, 'rpm')),
       status,
       h('div', { class: 'strip' },
-        h('div', {}, 'czas odcinka', lt),
-        h('div', {}, 'dystans', dist),
-        h('div', {}, 'przeciążenie', gval),
-        h('div', {}, 'gaz i hamulec', h('div', { class: 'ped' }, thr), h('div', { class: 'ped', style: 'margin-top:6px' }, brk))),
+        h('div', {}, 'stage time', lt),
+        h('div', {}, 'distance', dist),
+        h('div', {}, 'g-force', gval),
+        h('div', {}, 'throttle and brake', h('div', { class: 'ped' }, thr), h('div', { class: 'ped', style: 'margin-top:6px' }, brk))),
     );
     stage.append(root);
 

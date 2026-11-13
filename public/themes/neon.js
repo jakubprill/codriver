@@ -1,4 +1,4 @@
-// D · Neon – tylko bieg w świecącym pierścieniu obrotów i prędkość.
+// D · Neon – just the gear inside a glowing RPM ring, and the speed.
 import { h, s, useFont, useStyle, rpmInfo, gearText, fmtTime, clamp, blinkOn } from '../lib/util.js';
 
 const C = { bg: '#08070d', track: '#1a1726', fg: '#f3f0ff', muted: '#8a84a6', cyan: '#38e8ff', violet: '#8b5cff', pink: '#ff3da8', blue: '#3b86ff' };
@@ -24,7 +24,7 @@ const ARC = CIRC * 0.75;
 export default {
   id: 'neon',
   name: 'Neon',
-  description: 'Bieg w świecącym pierścieniu obrotów, nic więcej',
+  description: 'The gear in a glowing RPM ring, nothing else',
   create(stage) {
     useFont('Unbounded:wght@300;500;800');
     useStyle('neon', CSS);
@@ -42,7 +42,7 @@ export default {
     const spd = h('b', {}, '0');
     const brk = h('i', { style: `background:${C.pink};height:0` });
     const thr = h('i', { style: `background:${C.cyan};height:0;box-shadow:0 0 16px ${C.cyan}` });
-    const lt = h('b', {}, '0:00,0');
+    const lt = h('b', {}, '0:00.0');
     const rpm = h('b', {}, '0');
     const status = h('div', { class: 'status' });
 
@@ -51,8 +51,8 @@ export default {
       h('div', { class: 'spd' }, spd, h('span', {}, 'km/h')),
       h('div', { class: 'rail', style: 'left:90px' }, brk),
       h('div', { class: 'rail', style: 'right:90px' }, thr),
-      h('div', { class: 'side', style: 'left:160px' }, 'czas', lt),
-      h('div', { class: 'side', style: 'right:160px;text-align:right' }, 'obroty', rpm),
+      h('div', { class: 'side', style: 'left:160px' }, 'time', lt),
+      h('div', { class: 'side', style: 'right:160px;text-align:right' }, 'rpm', rpm),
       status);
     stage.append(root);
 

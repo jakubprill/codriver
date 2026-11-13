@@ -1,4 +1,4 @@
-// Wspólne narzędzia motywów.
+// Shared helpers for themes.
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
 export const STAGE_W = 1600;
@@ -18,29 +18,29 @@ function build(el, attrs, kids) {
   return el;
 }
 
-/** Element HTML: h('div', {class: 'x', style: '...'}, 'tekst', h(...)) */
+/** HTML element: h('div', {class: 'x', style: '...'}, 'text', h(...)) */
 export const h = (tag, attrs, ...kids) => build(document.createElement(tag), attrs, kids);
-/** Element SVG */
+/** SVG element */
 export const s = (tag, attrs, ...kids) => build(document.createElementNS(SVG_NS, tag), attrs, kids);
 
 export const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 
-/** 0 = N, ujemny lub >= 10 (DiRT Rally) = R */
+/** 0 = N, negative or >= 10 (DiRT Rally) = R */
 export const gearText = (g) => (g === 0 ? 'N' : g < 0 || g >= 10 ? 'R' : String(g));
 
 export function fmtTime(sec) {
   const v = Math.max(0, sec || 0);
   const m = Math.floor(v / 60);
   const r = v - m * 60;
-  return `${m}:${r.toFixed(1).padStart(4, '0').replace('.', ',')}`;
+  return `${m}:${r.toFixed(1).padStart(4, '0')}`;
 }
 
-export const fmtInt = (v) => Math.round(v).toLocaleString('pl-PL');
-export const fmtG = (f) => `${Math.hypot(f.gLat, f.gLon).toFixed(1).replace('.', ',')} g`;
+export const fmtInt = (v) => Math.round(v).toLocaleString('en-US');
+export const fmtG = (f) => `${Math.hypot(f.gLat, f.gLon).toFixed(1)} g`;
 
 /**
- * Obroty względem maksimum. Strefy wspólne dla wszystkich motywów, żeby lampki
- * zapalały się w tym samym momencie niezależnie od wyglądu.
+ * RPM relative to the maximum. Zones are shared by all themes so shift lights
+ * come on at the same moment whatever the look.
  */
 export const ZONES = { amber: 0.8, red: 0.92, limit: 0.965 };
 
@@ -50,12 +50,12 @@ export function rpmInfo(f) {
   return { max, frac, atLimit: max > 0 && f.rpm / max >= ZONES.limit };
 }
 
-/** Miganie na odcięciu: ~6 Hz, wyłączone przy prefers-reduced-motion. */
+/** Blinking at the limiter: ~6 Hz, off with prefers-reduced-motion. */
 const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const blinkOn = () => reduceMotion || Math.floor(performance.now() / 85) % 2 === 0;
 
 const loadedFonts = new Set();
-/** Dołącza czcionkę Google Fonts (raz). Bez internetu zadziała zapasowa z font-family. */
+/** Adds a Google Fonts font (once). Offline, the fallback from font-family is used. */
 export function useFont(family) {
   if (loadedFonts.has(family)) return;
   loadedFonts.add(family);
@@ -69,7 +69,7 @@ export function useStyle(id, css) {
   document.head.append(h('style', { 'data-theme': id }, css));
 }
 
-/** Punkt na okręgu; kąt w stopniach, 0 = góra, zgodnie z ruchem wskazówek. */
+/** A point on a circle; angle in degrees, 0 = top, clockwise. */
 export function polar(cx, cy, r, deg) {
   const a = ((deg - 90) * Math.PI) / 180;
   return [cx + r * Math.cos(a), cy + r * Math.sin(a)];

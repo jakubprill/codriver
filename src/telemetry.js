@@ -1,4 +1,4 @@
-// Stan telemetrii: ostatnia ramka, uczenie się maksymalnych obrotów, wykrywanie przerwy.
+// Telemetry state: the latest frame, learning max RPM, detecting gaps.
 
 /**
  * @typedef {object} Frame
@@ -8,8 +8,8 @@
  * @property {number} lapDistance   m
  * @property {number} speedKmh
  * @property {number} rpm
- * @property {number} maxRpm        0 = gra nie podaje
- * @property {number} gear          0 = luz; wsteczny zależy od gry
+ * @property {number} maxRpm        0 = not provided by the game
+ * @property {number} gear          0 = neutral; reverse depends on the game
  * @property {number} throttle      0..1
  * @property {number} brake         0..1
  * @property {number} clutch        0..1
@@ -20,7 +20,7 @@
  * @property {number[]} wheelsKmh
  */
 
-const GAP_RESET_MS = 5000;   // przerwa = nowy odcinek / inne auto
+const GAP_RESET_MS = 5000;   // gap = new stage / different car
 const LIVE_MS = 1000;
 
 export class TelemetryState {
@@ -46,7 +46,7 @@ export class TelemetryState {
     return this.lastPacketAt > 0 && this.now() - this.lastPacketAt < LIVE_MS;
   }
 
-  /** Ramka dla przeglądarki: gra podaje max obrotów → bierzemy jej, inaczej wyuczone. */
+  /** Frame for the browser: use the game's max RPM if it provides one, otherwise the learned value. */
   snapshot() {
     if (!this.live || !this.latest) return { live: false };
     const maxRpm = this.latest.maxRpm || this.learnedMaxRpm;

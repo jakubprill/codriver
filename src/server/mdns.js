@@ -1,9 +1,9 @@
-// Minimalny responder mDNS: odpowiada na pytania o "<name>.local" adresem IPv4 tego komputera.
-// Dzięki temu telefon może otwierać http://codriver.local niezależnie od tego, jakie IP
-// komputer dostał w danej sieci. Tylko rekord A; bez zależności.
+// A minimal mDNS responder: answers queries for "<name>.local" with this machine's IPv4 address,
+// so a phone can open http://codriver.local whatever IP the PC got on the current network.
+// A records only; no dependencies.
 //
-// Działa na iPhonie/iPadzie, macOS, Windows 10+ i Linuksie z Avahi. Android rozwiązuje
-// nazwy .local zależnie od wersji i producenta – dlatego zawsze pokazujemy też adres IP i kod QR.
+// Works on iPhone/iPad, macOS, Windows 10+ and Linux with Avahi. Android resolves .local names
+// depending on version and vendor – which is why we always show the IP address and a QR code too.
 import dgram from 'node:dgram';
 import os from 'node:os';
 
@@ -13,7 +13,7 @@ const TYPE_A = 1;
 const TYPE_ANY = 255;
 const TTL = 120;
 
-/** Adresy IPv4 w sieci lokalnej z maskami. */
+/** IPv4 addresses on the local network, with netmasks. */
 export function lanInterfaces() {
   const out = [];
   for (const list of Object.values(os.networkInterfaces())) {
@@ -31,7 +31,7 @@ function readName(buf, off) {
   let next = off;
   for (let guard = 0; guard < 64; guard++) {
     const len = buf[off];
-    if (len === undefined) throw new Error('ucięty pakiet');
+    if (len === undefined) throw new Error('truncated packet');
     if (len === 0) { if (!jumped) next = off + 1; break; }
     if ((len & 0xc0) === 0xc0) {
       if (!jumped) next = off + 2;
@@ -50,7 +50,7 @@ function encodeName(name) {
   return Buffer.concat([...parts, Buffer.from([0])]);
 }
 
-/** Pytania z pakietu mDNS (tylko zapytania, odpowiedzi innych hostów pomijamy). */
+/** Questions in an mDNS packet (queries only; answers from other hosts are ignored). */
 export function parseQuestions(buf) {
   if (buf.length < 12 || (buf.readUInt16BE(2) & 0x8000)) return [];
   const qd = buf.readUInt16BE(4);
@@ -66,25 +66,25 @@ export function parseQuestions(buf) {
   return out;
 }
 
-/** Odpowiedź z rekordem A. `id` i pytanie dołączamy tylko przy zapytaniu „legacy” (nie z portu 5353). */
+/** An answer with an A record. `id` and the question are included only for legacy queries (not from port 5353). */
 export function buildAnswer(name, ip, { id = 0, question = false } = {}) {
   const n = encodeName(name);
   const header = Buffer.alloc(12);
   header.writeUInt16BE(id, 0);
-  header.writeUInt16BE(0x8400, 2);              // odpowiedź, autorytatywna
+  header.writeUInt16BE(0x8400, 2);              // response, authoritative
   header.writeUInt16BE(question ? 1 : 0, 4);
   header.writeUInt16BE(1, 6);
   const q = question ? Buffer.concat([n, Buffer.from([0, TYPE_A, 0, 1])]) : Buffer.alloc(0);
   const rr = Buffer.alloc(10);
   rr.writeUInt16BE(TYPE_A, 0);
-  rr.writeUInt16BE(question ? 0x0001 : 0x8001, 2); // klasa IN, bit „cache flush” w multicast
+  rr.writeUInt16BE(question ? 0x0001 : 0x8001, 2); // class IN, cache-flush bit for multicast
   rr.writeUInt32BE(TTL, 4);
   rr.writeUInt16BE(4, 8);
   return Buffer.concat([header, q, n, rr, Buffer.from(ip.split('.').map(Number))]);
 }
 
 /**
- * Uruchamia responder. Błędy (np. port 5353 zajęty) nie zatrzymują aplikacji – zwraca false w `ok`.
+ * Starts the responder. Errors (e.g. port 5353 busy) don't stop the app – `ok` is false then.
  * @returns {Promise<{ ok: boolean, hostname: string, close(): void }>}
  */
 export function startMdns(hostname = 'codriver.local') {
@@ -104,7 +104,7 @@ export function startMdns(hostname = 'codriver.local') {
     const ip = pickIp(rinfo.address);
     if (!ip) return;
     if (rinfo.port !== MDNS_PORT) {
-      // zapytanie „legacy unicast” (zwykły resolver): odpowiedź na adres pytającego, z jego ID
+      // legacy unicast query (a plain resolver): reply to the sender's address, with its ID
       sock.send(buildAnswer(name, ip, { id: msg.readUInt16BE(0), question: true }), rinfo.port, rinfo.address);
     } else {
       sock.send(buildAnswer(name, ip), MDNS_PORT, asked.unicast ? rinfo.address : MDNS_ADDR);
@@ -112,20 +112,20 @@ export function startMdns(hostname = 'codriver.local') {
   });
 
   return new Promise((resolve) => {
-    const fail = () => resolve({ ok: false, hostname: name, close() { try { sock.close(); } catch { /* już zamknięty */ } } });
+    const fail = () => resolve({ ok: false, hostname: name, close() { try { sock.close(); } catch { /* already closed */ } } });
     sock.once('error', fail);
     sock.bind(MDNS_PORT, () => {
       try {
         for (const i of lanInterfaces()) {
-          try { sock.addMembership(MDNS_ADDR, i.address); } catch { /* interfejs bez multicastu */ }
+          try { sock.addMembership(MDNS_ADDR, i.address); } catch { /* interface without multicast */ }
         }
         sock.setMulticastTTL(255);
-        // ogłoszenie przy starcie (dwa razy, jak zaleca RFC 6762)
+        // announce at startup (twice, as RFC 6762 recommends)
         const announce = () => { const ip = pickIp(); if (ip) sock.send(buildAnswer(name, ip), MDNS_PORT, MDNS_ADDR); };
         announce();
         setTimeout(announce, 1000).unref();
         sock.removeListener('error', fail);
-        sock.on('error', () => { /* zgubiony pakiet nie zatrzymuje serwera */ });
+        sock.on('error', () => { /* a lost packet doesn't stop the server */ });
         resolve({ ok: true, hostname: name, close() { sock.close(); } });
       } catch {
         fail();

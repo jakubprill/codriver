@@ -1,5 +1,5 @@
-// Plansza 1600×800 skalowana do kontenera: każdy motyw rysuje w stałych pikselach,
-// a na telefonie, tablecie i monitorze wygląda tak samo.
+// A 1600×800 stage scaled to its container: every theme draws in fixed pixels
+// and looks the same on a phone, a tablet and a monitor.
 import { h, STAGE_W, STAGE_H } from './util.js';
 
 export function createStage(container) {

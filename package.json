@@ -1,7 +1,7 @@
 {
   "name": "codriver",
-  "version": "0.3.2",
-  "description": "Dashboard telemetrii z gier wyścigowych na drugi monitor, telefon i tablet",
+  "version": "0.4.0",
+  "description": "Racing-game telemetry dashboard for a second monitor, phone or tablet",
   "type": "module",
   "license": "Unlicense",
   "engines": {

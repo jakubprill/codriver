@@ -1,4 +1,4 @@
-// C · Kokpit – wyświetlacz jak na kierownicy: rząd lampek, słupkowy obrotomierz, dane w ramkach.
+// C · Cockpit (id: kokpit) – a steering-wheel display: a row of LEDs, a bar tachometer, data in boxes.
 import { h, useFont, useStyle, rpmInfo, gearText, fmtTime, fmtInt, fmtG, clamp, blinkOn, ZONES } from '../lib/util.js';
 
 const C = { bg: '#050709', line: '#22303a', label: '#6f8796', fg: '#f5f7f8', off: '#121a20', cyan: '#39c6f0', green: '#39d98a', yellow: '#f4c21d', red: '#ff4d3a', blue: '#3b86ff' };
@@ -32,8 +32,8 @@ const N_BARS = 60;
 
 export default {
   id: 'kokpit',
-  name: 'Kokpit',
-  description: 'Wyświetlacz z kierownicy: lampki, słupki i ramki z danymi',
+  name: 'Cockpit',
+  description: 'Steering-wheel display: LEDs, bars and data boxes',
   create(stage) {
     useFont('Chakra+Petch:wght@400;600;700');
     useStyle('kokpit', CSS);
@@ -53,9 +53,9 @@ export default {
     const speed = h('div', { class: 'big' }, '0');
     const rpm = h('div', { class: 'big', style: 'font-size:130px;font-weight:600' }, '0');
     const gear = h('div', { class: 'gearbox' }, '–');
-    const lt = h('div', { class: 'val' }, '0:00,0');
+    const lt = h('div', { class: 'val' }, '0:00.0');
     const dist = h('div', { class: 'val' }, '0 m');
-    const gval = h('div', { class: 'val' }, '0,0 g');
+    const gval = h('div', { class: 'val' }, '0.0 g');
     const thr = h('i', { style: `background:${C.green};width:0` });
     const brk = h('i', { style: `background:${C.red};width:0` });
     const status = h('div', { class: 'status' });
@@ -65,16 +65,16 @@ export default {
       h('div', {}, h('div', { class: 'bars' }, bars), scale),
       status,
       h('div', { class: 'row3' },
-        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'prędkość'), speed, h('div', { class: 'lab' }, 'km/h')),
+        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'speed'), speed, h('div', { class: 'lab' }, 'km/h')),
         gear,
-        h('div', { class: 'box', style: 'text-align:right' }, h('div', { class: 'lab' }, 'obroty'), rpm, h('div', { class: 'lab' }, 'obr/min'))),
+        h('div', { class: 'box', style: 'text-align:right' }, h('div', { class: 'lab' }, 'rpm'), rpm, h('div', { class: 'lab' }, 'rev/min'))),
       h('div', { class: 'row4' },
-        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'czas odcinka'), lt),
-        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'dystans'), dist),
+        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'stage time'), lt),
+        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'distance'), dist),
         h('div', { class: 'box', style: 'justify-content:center;gap:12px' },
-          h('div', { class: 'ped' }, h('span', {}, 'gaz'), h('span', { class: 'track' }, thr)),
-          h('div', { class: 'ped' }, h('span', {}, 'ham.'), h('span', { class: 'track' }, brk))),
-        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'przeciążenie'), gval)),
+          h('div', { class: 'ped' }, h('span', {}, 'thr.'), h('span', { class: 'track' }, thr)),
+          h('div', { class: 'ped' }, h('span', {}, 'brk.'), h('span', { class: 'track' }, brk))),
+        h('div', { class: 'box' }, h('div', { class: 'lab' }, 'g-force'), gval)),
     );
     stage.append(root);
 

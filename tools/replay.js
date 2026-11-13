@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Odtwarza nagranie CSV (z tools/udp-listen.ps1) jako pakiety UDP – test dashboardu bez gry.
+// Plays back a CSV recording (from tools/udp-listen.ps1) as UDP packets – test the dashboard without the game.
 //
 //   node tools/replay.js test/fixtures/dirt3-2026-11-13.csv [--port 20777] [--loop]
 import fs from 'node:fs';
@@ -11,7 +11,7 @@ const portIdx = args.indexOf('--port');
 const port = Number(portIdx >= 0 ? args[portIdx + 1] : 20777);
 const loop = args.includes('--loop');
 if (!file) {
-  console.log('Użycie: node tools/replay.js plik.csv [--port 20777] [--loop]');
+  console.log('Usage: node tools/replay.js recording.csv [--port 20777] [--loop]');
   process.exit(1);
 }
 
@@ -25,7 +25,7 @@ export function readRecording(path) {
 }
 
 const rows = readRecording(file);
-console.log(`${rows.length} pakietów -> udp 127.0.0.1:${port}${loop ? ' (w pętli)' : ''}`);
+console.log(`${rows.length} packets -> udp 127.0.0.1:${port}${loop ? ' (looping)' : ''}`);
 
 const sock = dgram.createSocket('udp4');
 function play() {

@@ -1,25 +1,25 @@
-// Testy kodu QR i odpowiedzi mDNS (bez sieci).
+// QR code and mDNS answer tests (no network).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { encodeQr, qrSvg } from '../public/lib/qr.js';
 import { parseQuestions, buildAnswer } from '../src/server/mdns.js';
 
-test('QR: rozmiar rośnie z długością adresu, wzorce narożne są na miejscu', () => {
+test('QR: size grows with the address length, finder patterns are in place', () => {
   const short = encodeQr('http://192.168.8.126');
   const long = encodeQr('http://192.168.8.126:8080/?theme=papier&demo');
-  assert.equal(short.size, 25); // wersja 2
+  assert.equal(short.size, 25); // version 2
   assert.ok(long.size > short.size);
   for (const { size, modules } of [short, long]) {
     for (const [x, y] of [[0, 0], [size - 7, 0], [0, size - 7]]) {
-      assert.equal(modules[y][x], true, 'róg znacznika ciemny');
-      assert.equal(modules[y + 1][x + 1], false, 'jasny pierścień');
-      assert.equal(modules[y + 3][x + 3], true, 'środek znacznika ciemny');
+      assert.equal(modules[y][x], true, 'finder corner is dark');
+      assert.equal(modules[y + 1][x + 1], false, 'light ring');
+      assert.equal(modules[y + 3][x + 3], true, 'finder centre is dark');
     }
   }
 });
 
-test('QR: zbyt długi tekst daje czytelny błąd, SVG ma viewBox', () => {
-  assert.throws(() => encodeQr('x'.repeat(400)), /za długi/);
+test('QR: too-long text gives a clear error, SVG has a viewBox', () => {
+  assert.throws(() => encodeQr('x'.repeat(400)), /too long/);
   assert.match(qrSvg('http://codriver.local'), /^<svg[^>]+viewBox="0 0 \d+ \d+"/);
 });
 
@@ -28,20 +28,20 @@ function query(name, type = 1) {
   return Buffer.concat([Buffer.from([0xab, 0xcd, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]), ...labels, Buffer.from([0, 0, type, 0x80, 1])]);
 }
 
-test('mDNS: zapytanie o codriver.local jest rozpoznane (bez względu na wielkość liter)', () => {
+test('mDNS: a query for codriver.local is recognised (case-insensitive)', () => {
   const [q] = parseQuestions(query('CoDriver.local'));
   assert.deepEqual(q, { name: 'codriver.local', type: 1, unicast: true });
 });
 
-test('mDNS: odpowiedź niesie adres IP i ID pytającego (legacy unicast)', () => {
+test('mDNS: the answer carries the IP address and the querier ID (legacy unicast)', () => {
   const ans = buildAnswer('codriver.local', '192.168.8.126', { id: 0xabcd, question: true });
   assert.equal(ans.readUInt16BE(0), 0xabcd);
-  assert.equal(ans.readUInt16BE(2) & 0x8000, 0x8000, 'bit odpowiedzi');
-  assert.equal(ans.readUInt16BE(6), 1, 'jeden rekord');
+  assert.equal(ans.readUInt16BE(2) & 0x8000, 0x8000, 'response bit');
+  assert.equal(ans.readUInt16BE(6), 1, 'one record');
   assert.deepEqual([...ans.subarray(-4)], [192, 168, 8, 126]);
 });
 
-test('mDNS: odpowiedzi innych hostów są ignorowane', () => {
+test('mDNS: answers from other hosts are ignored', () => {
   const ans = buildAnswer('inny.local', '10.0.0.1');
   assert.deepEqual(parseQuestions(ans), []);
 });

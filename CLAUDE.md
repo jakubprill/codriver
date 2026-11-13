@@ -2,7 +2,7 @@
 
 - Language: everything that goes into the repository is in English – documentation (README, `docs/`, ADRs, this file),
   commit messages, pull request titles and descriptions, release notes. Conversation with the maintainer may be in Polish.
-  The user interface is in Polish for now. Code identifiers are in English.
+  The user interface and code comments are in English too. Code identifiers are in English.
 - Zero npm dependencies. `node:*` modules only; the code must run on Bun and Node 18+ (`node --test` and `bun test` pass).
 - Architecture and how to add a game or a look: `docs/architecture.md`. Telemetry field maps: `docs/telemetry/`.
 - The server never writes to the console in a loop (status goes to `process.title`) – clicking into a Windows console freezes the process.

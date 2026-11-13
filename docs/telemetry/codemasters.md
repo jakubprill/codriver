@@ -26,7 +26,7 @@ it happens without codriver too.
 What to do about it:
 
 1. **Turn telemetry off when you play without the dashboard.** On the PC: codriver panel → **DiRT 3** card →
-   “Wyłącz telemetrię” (turn off), or `codriver --telemetry off` (`on` enables it, `status` shows the state).
+   “Turn telemetry off”, or `codriver --telemetry off` (`on` enables it, `status` shows the state).
    The change applies from the next game launch; the first change creates a `hardware_settings_config.xml.codriver-backup` copy.
 2. **Community fix [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (MIT, also recommended by SimHub).
    It injects the EasyHook library into the game process and wraps `sendto`: when the game gets error 10038,
@@ -34,8 +34,8 @@ What to do about it:
 
    **With codriver:** download [DiRTTelemetryErrorFix_Release.zip](https://github.com/RoccoC/DiRTTelemetryErrorFix/blob/master/bin/DiRTTelemetryErrorFix_Release.zip?raw=true)
    and extract it to `tools\DiRTTelemetryErrorFix` in the codriver folder (with `codriver.exe`: to a `DiRTTelemetryErrorFix`
-   folder next to the file, or point to it with the `CODRIVER_DIRT3_FIX` environment variable). Then the **“Uruchom DiRT 3”**
-   (Launch DiRT 3) button in the panel – or `codriver --launch-dirt3` – enables telemetry, starts the fix and launches the game via Steam.
+   folder next to the file, or point to it with the `CODRIVER_DIRT3_FIX` environment variable). Then the **“Launch DiRT 3”**
+   button in the panel – or `codriver --launch-dirt3` – enables telemetry, starts the fix and launches the game via Steam.
 
    Why codriver doesn't fix this itself: the error happens inside the game's code, before the data leaves the PC.
    Fixing it requires injecting native code into the game process – that doesn't fit a lightweight, dependency-free app,

@@ -1,8 +1,8 @@
-// Generator kodów QR bez zależności: tryb bajtowy, poziom korekcji M, wersje 1–10
-// (do ~200 znaków – adres URL mieści się z zapasem). Wspólny dla serwera (konsola)
-// i przeglądarki (SVG). Implementacja według ISO/IEC 18004.
+// Dependency-free QR code generator: byte mode, error correction level M, versions 1–10
+// (up to ~200 characters – plenty for a URL). Shared by the server (console)
+// and the browser (SVG). Implemented according to ISO/IEC 18004.
 
-const ECC_PER_BLOCK = [10, 16, 26, 18, 24, 16, 18, 22, 22, 26]; // poziom M, wersje 1..10
+const ECC_PER_BLOCK = [10, 16, 26, 18, 24, 16, 18, 22, 22, 26]; // level M, versions 1..10
 const NUM_BLOCKS = [1, 1, 1, 2, 2, 4, 4, 4, 5, 5];
 const FORMAT_ECL_M = 0;
 
@@ -17,7 +17,7 @@ function rawModules(ver) {
 }
 const dataCodewords = (ver) => Math.floor(rawModules(ver) / 8) - ECC_PER_BLOCK[ver - 1] * NUM_BLOCKS[ver - 1];
 
-// --- Reed–Solomon w GF(256), wielomian 0x11D ---
+// --- Reed–Solomon over GF(256), polynomial 0x11D ---
 function gfMul(x, y) {
   let z = 0;
   for (let i = 7; i >= 0; i--) {
@@ -61,20 +61,20 @@ function alignmentPositions(ver) {
 
 /**
  * @param {string} text
- * @returns {{ size: number, modules: boolean[][] }}  modules[y][x], true = ciemny
+ * @returns {{ size: number, modules: boolean[][] }}  modules[y][x], true = dark
  */
 export function encodeQr(text) {
   const bytes = [...new TextEncoder().encode(text)];
 
-  // 1. wersja
+  // 1. version
   let ver = 1;
   for (; ver <= 10; ver++) {
     const bits = 4 + (ver < 10 ? 8 : 16) + bytes.length * 8;
     if (bits <= dataCodewords(ver) * 8) break;
   }
-  if (ver > 10) throw new Error('Tekst za długi na kod QR (wersje 1–10)');
+  if (ver > 10) throw new Error('Text too long for a QR code (versions 1–10)');
 
-  // 2. strumień bitów
+  // 2. bit stream
   const bits = [];
   const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
   push(0b0100, 4);
@@ -87,7 +87,7 @@ export function encodeQr(text) {
   const data = [];
   for (let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(''), 2));
 
-  // 3. bloki z korekcją i przeplot
+  // 3. blocks with error correction, interleaved
   const numBlocks = NUM_BLOCKS[ver - 1];
   const eccLen = ECC_PER_BLOCK[ver - 1];
   const raw = Math.floor(rawModules(ver) / 8);
@@ -100,7 +100,7 @@ export function encodeQr(text) {
     const dat = data.slice(k, k + len);
     k += len;
     const ecc = rsRemainder(dat, divisor);
-    if (i < numShort) dat.push(-1); // miejsce, którego krótki blok nie ma
+    if (i < numShort) dat.push(-1); // a slot the short block does not have
     blocks.push(dat.concat(ecc));
   }
   const codewords = [];
@@ -108,7 +108,7 @@ export function encodeQr(text) {
     blocks.forEach((b) => { if (b[i] !== -1) codewords.push(b[i]); });
   }
 
-  // 4. matryca i wzorce stałe
+  // 4. matrix and function patterns
   const size = ver * 4 + 17;
   const mod = Array.from({ length: size }, () => new Array(size).fill(false));
   const fn = Array.from({ length: size }, () => new Array(size).fill(false));
@@ -155,7 +155,7 @@ export function encodeQr(text) {
     }
   }
 
-  // 5. dane zygzakiem
+  // 5. data in a zigzag
   let i = 0;
   for (let right = size - 1; right >= 1; right -= 2) {
     if (right === 6) right = 5;
@@ -171,7 +171,7 @@ export function encodeQr(text) {
     }
   }
 
-  // 6. maska z najmniejszą karą
+  // 6. the mask with the lowest penalty
   const MASKS = [
     (x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x) => x % 3 === 0, (x, y) => (x + y) % 3 === 0,
     (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => ((x * y) % 2) + ((x * y) % 3) === 0,
@@ -185,7 +185,7 @@ export function encodeQr(text) {
     applyMask(m); drawFormat(m);
     const score = penalty(mod, size);
     if (score < bestScore) { bestScore = score; best = m; }
-    applyMask(m); // XOR – cofnięcie
+    applyMask(m); // XOR – undo
   }
   applyMask(best); drawFormat(best);
   return { size, modules: mod };
@@ -199,7 +199,7 @@ function penalty(m, size) {
       if (i < size && get(i) === get(i - 1)) run++;
       else { if (run >= 5) p += 3 + run - 5; run = 1; }
     }
-    // wzorzec podobny do znacznika: 1011101 z czterema jasnymi z boku
+    // finder-like pattern: 1011101 with four light modules on one side
     for (let i = 0; i + 11 <= size; i++) {
       const s = Array.from({ length: 11 }, (_, k) => get(i + k));
       const a = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], b = [...a].reverse();
@@ -218,7 +218,7 @@ function penalty(m, size) {
   return p;
 }
 
-/** SVG do wstawienia w stronę; `margin` w modułach (standard: 4). */
+/** SVG to put into a page; `margin` in modules (the standard is 4). */
 export function qrSvg(text, { margin = 4, dark = '#000', light = '#fff' } = {}) {
   const { size, modules } = encodeQr(text);
   const n = size + margin * 2;
@@ -228,7 +228,7 @@ export function qrSvg(text, { margin = 4, dark = '#000', light = '#fff' } = {}) 
     `<rect width="${n}" height="${n}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
 }
 
-/** Kod QR jako tekst do konsoli: dwa wiersze modułów na jedną linię (znaki półbloków). */
+/** QR code as console text: two module rows per line (half-block characters). */
 export function qrTerminal(text, { margin = 2 } = {}) {
   const { size, modules } = encodeQr(text);
   const at = (x, y) => x >= 0 && y >= 0 && x < size && y < size && modules[y][x];
@@ -237,7 +237,7 @@ export function qrTerminal(text, { margin = 2 } = {}) {
     let line = '';
     for (let x = -margin; x < size + margin; x++) {
       const top = at(x, y), bottom = at(x, y + 1);
-      // jasne tło konsoli = ciemny moduł; drukujemy „negatyw” pod czarną konsolę:
+      // printed as a negative for a black console: lit character = light module
       line += top && bottom ? ' ' : top ? '▄' : bottom ? '▀' : '█';
     }
     lines.push(line);

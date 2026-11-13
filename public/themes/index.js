@@ -1,5 +1,6 @@
-// Rejestr motywów. Nowy wygląd = nowy plik w tym katalogu + wpis tutaj.
-// API motywu: { id, name, description, create(stage) -> { update(frame), idle(text) } }
+// Theme registry. A new look = a new file in this folder + an entry here.
+// Theme API: { id, name, description, create(stage) -> { update(frame), idle(text) } }
+// Theme ids are stored on devices (localStorage) – do not rename them.
 import odcinek from './odcinek.js';
 import zegary from './zegary.js';
 import kokpit from './kokpit.js';

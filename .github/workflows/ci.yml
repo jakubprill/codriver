@@ -14,9 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Testy na Node
+      - name: Tests on Node
         run: node --test
-      - name: Testy na Bun
+      - name: Tests on Bun
         run: bun test
-      - name: Próbna kompilacja
+      - name: Test build
         run: bun scripts/build.js

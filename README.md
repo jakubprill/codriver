@@ -3,13 +3,13 @@
 A racing-game dashboard for your phone, tablet or second monitor.
 Speed, RPM, gear and shift lights – in the browser, no app to install.
 
-![Display picker](docs/screens/wybor.png)
+![Display picker](docs/screens/picker.png)
 
 Six looks to choose from; every device remembers its own.
 
-| ![Odcinek](docs/screens/odcinek.png) | ![Papier](docs/screens/papier.png) | ![LCD](docs/screens/lcd.png) |
+| ![Stage](docs/screens/odcinek.png) | ![Paper](docs/screens/papier.png) | ![LCD](docs/screens/lcd.png) |
 |---|---|---|
-| Odcinek (stage) | Papier (paper) | LCD |
+| Stage | Paper | LCD |
 
 Works with **DiRT 3**. **DiRT Rally** uses the same telemetry format – support is waiting for a real-world test.
 
@@ -41,7 +41,6 @@ No dependencies – all you need is [Bun](https://bun.sh) or Node 18+.
 `bun test` runs the tests, `bun run build:windows` builds `codriver.exe`.
 How to add a game or a look: [docs/architecture.md](docs/architecture.md).
 
-The user interface is in Polish for now.
 
 ## License
 

@@ -1,6 +1,6 @@
-// HTTP: pliki z public/, strumień ramek przez Server-Sent Events, status w JSON.
-// SSE zamiast WebSocketów: ruch jest jednokierunkowy, a SSE działa w każdej przeglądarce
-// i w czystym Node/Bun bez bibliotek.
+// HTTP: files from public/, a frame stream via Server-Sent Events, status as JSON.
+// SSE instead of WebSockets: traffic is one-way, and SSE works in every browser
+// and in plain Node/Bun without libraries.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,11 +20,11 @@ const TYPES = {
 
 /**
  * @param {object} o
- * @param {string} o.publicDir  katalog z interfejsem (tryb deweloperski)
- * @param {Record<string,string>|null} o.assets  osadzone pliki: ścieżka URL -> ścieżka w pliku .exe
- * @param {() => object} [o.info]  adresy w sieci do wyświetlenia (kod QR)
- * @param {number} [o.udpPort]  port, na który gra ma wysyłać dane
- * @param {string} [o.appDir]  folder codrivera (tu szukamy poprawki DiRT 3)
+ * @param {string} o.publicDir  UI folder (development mode)
+ * @param {Record<string,string>|null} o.assets  embedded files: URL path -> path inside the .exe
+ * @param {() => object} [o.info]  network addresses to display (QR code)
+ * @param {number} [o.udpPort]  the port the game should send data to
+ * @param {string} [o.appDir]  codriver folder (where we look for the DiRT 3 fix)
  */
 export function createHttpServer({ publicDir, assets = null, state, info = () => ({}), udpPort = 20777, appDir = '.', sendHz = 30 }) {
   const clients = new Set();
@@ -67,19 +67,19 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
       return;
     }
 
-    // pliki statyczne
+    // static files
     let rel = decodeURIComponent(url.pathname);
     if (rel.endsWith('/')) rel += 'index.html';
     let file;
     if (assets) {
       file = assets[rel];
-      if (!file) { res.writeHead(404); res.end('Nie ma takiego pliku'); return; }
+      if (!file) { res.writeHead(404); res.end('Not found'); return; }
     } else {
       file = path.resolve(root, '.' + rel);
       if (!file.startsWith(root + path.sep)) { res.writeHead(403); res.end(); return; }
     }
     fs.readFile(file, (err, data) => {
-      if (err) { res.writeHead(404); res.end('Nie ma takiego pliku'); return; }
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
       res.writeHead(200, {
         'Content-Type': TYPES[path.extname(rel)] || 'application/octet-stream',
         'Cache-Control': 'no-cache',
@@ -99,8 +99,8 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
 }
 
 /**
- * Czy żądanie przyszło z tego samego komputera – także gdy strona jest otwarta przez adres IP
- * albo codriver.local (wtedy adres nadawcy to własny adres karty sieciowej, a nie 127.0.0.1).
+ * Whether the request came from this same machine – also when the page is opened via the IP address
+ * or codriver.local (then the sender's address is the machine's own interface address, not 127.0.0.1).
  */
 function isLoopback(addr = '') {
   const a = addr.replace(/^::ffff:/, '');
@@ -118,11 +118,11 @@ function fixInfo(appDir) {
   return { found: !!found, path: found, suggestedDir: dirt3Launcher.suggestedFixDir(appDir), download: dirt3Launcher.FIX_DOWNLOAD };
 }
 
-/** POST: włącza telemetrię, uruchamia poprawkę (jeśli jest) i grę – tylko z tego komputera. */
+/** POST: enables telemetry, starts the fix (if present) and the game – from this machine only. */
 function handleLaunch(req, res, udpPort, appDir) {
-  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Dozwolony POST' });
+  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Only POST is allowed' });
   if (!isLoopback(req.socket.remoteAddress)) {
-    return sendJson(res, 403, { error: 'Grę można uruchomić tylko na komputerze, na którym działa codriver.' });
+    return sendJson(res, 403, { error: 'The game can only be launched on the computer running codriver.' });
   }
   try {
     const result = dirt3Launcher.launchDirt3({ appDir, udpPort });
@@ -132,25 +132,25 @@ function handleLaunch(req, res, udpPort, appDir) {
   }
 }
 
-/** GET: stan telemetrii w ustawieniach DiRT 3. POST {"enabled": bool}: zmiana – tylko z tego komputera. */
+/** GET: telemetry state in the DiRT 3 settings. POST {"enabled": bool}: change it – from this machine only. */
 function handleTelemetry(req, res, udpPort, appDir) {
   if (req.method === 'GET') return sendJson(res, 200, { ...dirt3Config.status(udpPort), fix: fixInfo(appDir), canLaunch: process.platform === 'win32' });
-  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Dozwolone GET i POST' });
+  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Only GET and POST are allowed' });
   if (!isLoopback(req.socket.remoteAddress)) {
-    return sendJson(res, 403, { error: 'Ustawienia gry można zmieniać tylko na komputerze, na którym działa codriver.' });
+    return sendJson(res, 403, { error: 'Game settings can only be changed on the computer running codriver.' });
   }
   let body = '';
   req.on('data', (c) => { body += c; if (body.length > 1000) req.destroy(); });
   req.on('end', () => {
     try {
       const { enabled } = JSON.parse(body || '{}');
-      if (typeof enabled !== 'boolean') return sendJson(res, 400, { error: 'Podaj {"enabled": true|false}' });
+      if (typeof enabled !== 'boolean') return sendJson(res, 400, { error: 'Send {"enabled": true|false}' });
       const file = dirt3Config.findConfig();
-      if (!file) return sendJson(res, 404, { error: 'Nie znaleziono pliku ustawień DiRT 3. Uruchom grę raz, żeby go utworzyła.' });
+      if (!file) return sendJson(res, 404, { error: 'DiRT 3 settings file not found. Start the game once so it creates it.' });
       dirt3Config.applyToFile(file, enabled, udpPort);
       sendJson(res, 200, { ...dirt3Config.status(udpPort, file), fix: fixInfo(appDir), canLaunch: process.platform === 'win32' });
     } catch (e) {
-      sendJson(res, 500, { error: `Nie udało się zmienić ustawień: ${e.message}` });
+      sendJson(res, 500, { error: `Could not change the settings: ${e.message}` });
     }
   });
 }

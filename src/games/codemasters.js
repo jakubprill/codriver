@@ -1,7 +1,7 @@
-// Codemasters "motion" UDP telemetry (DiRT 3, DiRT Rally, GRID, F1 2010–2017 i pokrewne).
-// Pakiet to tablica float32 little-endian. Pierwsze 38 pól jest wspólne dla wszystkich gier
-// tej rodziny; DiRT Rally z extradata=3 dokłada kolejne (m.in. maksymalne obroty).
-// Indeksy dla DiRT 3 zweryfikowane na nagraniu z jazdy – patrz docs/telemetry/codemasters.md.
+// Codemasters "motion" UDP telemetry (DiRT 3, DiRT Rally, GRID, F1 2010–2017 and related games).
+// The packet is an array of little-endian float32. The first 38 fields are shared by the whole
+// family; DiRT Rally with extradata=3 adds more (including max RPM).
+// DiRT 3 indices were verified on a recorded drive – see docs/telemetry/codemasters.md.
 
 const RAD_S_TO_RPM = 60 / (2 * Math.PI);
 
@@ -19,18 +19,18 @@ export const FIELDS = {
   clutch: 32,
   gear: 33,
   gLat: 34,
-  gLon: 35,                  // na starcie bywają -inf
+  gLon: 35,                  // may be -inf at the start
   lap: 36,
-  engineRate: 37,            // DiRT 3: rad/s; DiRT Rally: obr/min ÷ 10 (wykrywane niżej)
-  // tylko DiRT Rally / extradata=3 (66 pól):
-  maxRpm: 63,                // obr/min ÷ 10
+  engineRate: 37,            // DiRT 3: rad/s; DiRT Rally: RPM ÷ 10 (detected below)
+  // DiRT Rally / extradata=3 only (66 fields):
+  maxRpm: 63,                // RPM ÷ 10
   maxGears: 65,
 };
 
 const fin = (v) => (Number.isFinite(v) ? v : 0);
 
 /**
- * Zamienia surowy pakiet na wspólną ramkę telemetrii.
+ * Turns a raw packet into the common telemetry frame.
  * @param {Buffer} buf
  * @returns {import('../telemetry.js').Frame}
  */
@@ -39,8 +39,8 @@ export function parse(buf) {
   const f = (i) => (i < n ? buf.readFloatLE(i * 4) : 0);
   const extended = n >= 64;
 
-  // DiRT 3 podaje obroty w rad/s (bieg jałowy 125,66 = 1200 obr/min).
-  // DiRT Rally podaje obr/min ÷ 10. Rozróżniamy po długości pakietu.
+  // DiRT 3 reports engine rate in rad/s (idle 125.66 = 1200 RPM).
+  // DiRT Rally reports RPM ÷ 10. We tell them apart by packet length.
   const rawRate = fin(f(FIELDS.engineRate));
   const rpm = extended ? rawRate * 10 : rawRate * RAD_S_TO_RPM;
 

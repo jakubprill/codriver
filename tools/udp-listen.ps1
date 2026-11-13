@@ -1,27 +1,27 @@
-﻿# Dirt 3 – nasłuch telemetrii UDP (port 20777)
-# Pokazuje na żywo wybrane indeksy i zapisuje KAŻDY pakiet (wszystkie floaty) do CSV,
-# żeby potem zmapować indeksy. Ctrl+C kończy.
+﻿# DiRT 3 - UDP telemetry listener (port 20777)
+# Shows selected indices live and writes EVERY packet (all floats) to CSV,
+# so the indices can be mapped later. Ctrl+C stops.
 #
-# Uruchomienie: dwuklik w start-listen.bat albo:
-#   powershell -ExecutionPolicy Bypass -File dirt3-udp-listen.ps1
+# Run:
+#   powershell -ExecutionPolicy Bypass -File tools\udp-listen.ps1
 
 param(
     [int]$Port = 20777,
     [string]$CsvPath = (Join-Path $PSScriptRoot ("dirt3-telemetry-{0}.csv" -f (Get-Date -Format "yyyyMMdd-HHmmss")))
 )
 
-# Hipotezy indeksów (układ Codemasters, extradata=3) – DO WERYFIKACJI
+# Index guesses (Codemasters layout, extradata=3) - TO BE VERIFIED
 $guess = [ordered]@{
-    'czas'      = 0
-    'predkosc'  = 7    # m/s
-    'gaz'       = 29   # 0..1
-    'kier'      = 30   # -1..1
-    'hamulec'   = 31   # 0..1
-    'sprzeglo'  = 32
-    'bieg'      = 33
+    'time'      = 0
+    'speed'     = 7    # m/s
+    'throttle'  = 29   # 0..1
+    'steer'     = 30   # -1..1
+    'brake'     = 31   # 0..1
+    'clutch'    = 32
+    'gear'      = 33
     'gLat'      = 34
     'gLon'      = 35
-    'okrazenie' = 36
+    'lap'       = 36
     'rpm/10?'   = 37
 }
 
@@ -32,7 +32,7 @@ $writer = $null
 $count = 0
 $lastShow = [DateTime]::MinValue
 
-Write-Host "Nasłuch UDP na porcie $Port. Wejdź do gry i ruszaj. Ctrl+C = koniec." -ForegroundColor Cyan
+Write-Host "Listening for UDP on port $Port. Start driving in the game. Ctrl+C = stop." -ForegroundColor Cyan
 Write-Host "CSV: $CsvPath"
 
 try {
@@ -40,7 +40,7 @@ try {
         try {
             $bytes = $udp.Receive([ref]$remote)
         } catch [System.Net.Sockets.SocketException] {
-            Write-Host ("[{0:HH:mm:ss}] brak pakietów (2 s)..." -f (Get-Date)) -ForegroundColor DarkYellow
+            Write-Host ("[{0:HH:mm:ss}] no packets (2 s)..." -f (Get-Date)) -ForegroundColor DarkYellow
             continue
         }
         $n = [int][Math]::Floor($bytes.Length / 4)
@@ -50,7 +50,7 @@ try {
         if ($null -eq $writer) {
             $writer = New-Object System.IO.StreamWriter($CsvPath, $false, [System.Text.Encoding]::UTF8)
             $writer.WriteLine((@('t_ms', 'bytes') + (0..($n - 1) | ForEach-Object { "f$_" })) -join ';')
-            Write-Host "Pierwszy pakiet: $($bytes.Length) B = $n floatów (od $remote)" -ForegroundColor Green
+            Write-Host "First packet: $($bytes.Length) B = $n floats (from $remote)" -ForegroundColor Green
         }
         $inv = [System.Globalization.CultureInfo]::InvariantCulture
         $row = @([DateTimeOffset]::Now.ToUnixTimeMilliseconds(), $bytes.Length) + ($f | ForEach-Object { $_.ToString('R', $inv) })
@@ -71,5 +71,5 @@ try {
 } finally {
     if ($writer) { $writer.Close() }
     $udp.Close()
-    Write-Host "Zapisano $count pakietów do $CsvPath" -ForegroundColor Cyan
+    Write-Host "Saved $count packets to $CsvPath" -ForegroundColor Cyan
 }

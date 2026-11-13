@@ -1,4 +1,4 @@
-// B · Zegary – klasyczne tarcze z wskazówkami.
+// B · Gauges (id: zegary) – classic dials with needles.
 import { h, s, useFont, useStyle, rpmInfo, gearText, fmtTime, fmtInt, polar, blinkOn } from '../lib/util.js';
 
 const C = { ground: '#15120f', face: '#1d1915', rim: '#2c2620', ivory: '#efe6d2', muted: '#8f8473', minor: '#6d6356', needle: '#ff6a1a', red: '#c8321f', green: '#4cc38a', amber: '#f4a81d', blue: '#3b86ff' };
@@ -49,13 +49,13 @@ function dial({ max, step, major, label, redFrom, div = 1 }) {
 
 export default {
   id: 'zegary',
-  name: 'Zegary',
-  description: 'Analogowe tarcze z wskazówkami, jak w starym rajdówce',
+  name: 'Gauges',
+  description: 'Analog dials with needles, like an old rally car',
   create(stage) {
     useFont('Archivo+Narrow:wght@400;600;700');
     useStyle('zegary', CSS);
 
-    const spd = dial({ max: 200, step: 5, major: 20, label: 'Prędkościomierz' });
+    const spd = dial({ max: 200, step: 5, major: 20, label: 'Speedometer' });
     spd.svg.style.left = '70px';
     const spdNum = s('text', { x: 320, y: 470, fill: C.ivory, 'font-size': 88, 'font-weight': 700, 'text-anchor': 'middle' }, '0');
     spd.svg.append(spdNum, s('text', { x: 320, y: 512, fill: C.muted, 'font-size': 28, 'text-anchor': 'middle' }, 'km/h'));
@@ -64,27 +64,27 @@ export default {
     let tachMax = 0;
     const tachWrap = h('div');
     const buildTach = (maxRpm) => {
-      const max = Math.max(7, Math.ceil(maxRpm / 1000)); // skala w tysiącach
+      const max = Math.max(7, Math.ceil(maxRpm / 1000)); // scale in thousands
       if (tach && max === tachMax) return;
       tachMax = max;
-      tach = dial({ max, step: 0.25, major: 1, label: 'Obrotomierz', redFrom: maxRpm ? (maxRpm * 0.92) / 1000 : max - 1 });
+      tach = dial({ max, step: 0.25, major: 1, label: 'Tachometer', redFrom: maxRpm ? (maxRpm * 0.92) / 1000 : max - 1 });
       tach.svg.style.right = '70px';
-      tach.svg.append(s('text', { x: 320, y: 470, fill: C.muted, 'font-size': 28, 'text-anchor': 'middle' }, '×1000 obr/min'));
+      tach.svg.append(s('text', { x: 320, y: 470, fill: C.muted, 'font-size': 28, 'text-anchor': 'middle' }, '×1000 rpm'));
       tachWrap.replaceChildren(tach.svg);
     };
     buildTach(0);
 
     const leds = [C.green, C.green, C.amber, C.amber, C.red].map((c) => Object.assign(h('span'), { _c: c }));
     const gear = h('div', { class: 'gearbox' }, '–');
-    const lt = h('b', {}, '0:00,0');
+    const lt = h('b', {}, '0:00.0');
     const dist = h('b', {}, '0 m');
     const status = h('div', { class: 'status' });
 
     const root = h('div', { class: 't-zegary' },
       spd.svg, tachWrap,
-      h('div', { class: 'mid' }, h('div', { class: 'leds' }, leds), gear, h('div', { class: 'cap' }, 'bieg')),
+      h('div', { class: 'mid' }, h('div', { class: 'leds' }, leds), gear, h('div', { class: 'cap' }, 'gear')),
       status,
-      h('div', { class: 'strip' }, h('span', {}, 'czas odcinka', lt), h('span', {}, 'dystans', dist)),
+      h('div', { class: 'strip' }, h('span', {}, 'stage time', lt), h('span', {}, 'distance', dist)),
     );
     stage.append(root);
 

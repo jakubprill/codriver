@@ -13,11 +13,11 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); f
 #app { min-height: 100dvh; }
 button { font: inherit; color: inherit; }
 
-/* --- plansza 1600×800 --- */
+/* --- 1600×800 stage --- */
 .stage-frame { position: relative; overflow: hidden; flex: none; }
 .stage { position: absolute; left: 0; top: 0; width: 1600px; height: 800px; transform-origin: 0 0; overflow: hidden; }
 
-/* --- tryb dashboardu --- */
+/* --- dashboard mode --- */
 .dash { position: fixed; inset: 0; background: #000; display: grid; place-items: center; overflow: hidden;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 .dash .fit { position: absolute; inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -31,7 +31,7 @@ button { font: inherit; color: inherit; }
   color: var(--muted); font-size: 20px; display: none; }
 @media (orientation: portrait) { .dash .rotate { display: block; } }
 
-/* --- ekran wyboru --- */
+/* --- panel and picker --- */
 .picker { max-width: 1280px; margin: 0 auto; padding: calc(28px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)); }
 .picker h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; margin: 0 0 6px; letter-spacing: .01em; }
 .picker p.lead { margin: 0 0 24px; color: var(--muted); font-size: 20px; }
@@ -48,7 +48,7 @@ button { font: inherit; color: inherit; }
 .card .badge { color: var(--accent); font-size: 16px; margin-left: 8px; font-weight: 600; }
 .picker .foot { margin-top: 24px; color: var(--muted); font-size: 16px; }
 
-/* --- karta „Podłącz telefon” (tylko na komputerze) --- */
+/* --- “Connect a phone” card (PC only) --- */
 .connect { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-bottom: 32px; padding: 20px;
   border: 2px solid var(--accent); border-radius: 16px; background: var(--card); }
 .connect .qr { width: 200px; height: 200px; flex: none; border-radius: 8px; overflow: hidden; }
@@ -59,7 +59,7 @@ button { font: inherit; color: inherit; }
 .connect .addr.alt { font-size: 24px; font-weight: 600; color: var(--muted); }
 .connect .hint { font-size: 16px; margin-top: 10px; }
 
-/* --- karta „Telemetria w DiRT 3” (tylko na komputerze) --- */
+/* --- DiRT 3 card (PC only) --- */
 .telemetry { display: flex; gap: 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;
   padding: 20px; border: 2px solid var(--line); border-radius: 16px; background: var(--card); }
 .telemetry > div { flex: 1 1 420px; }
@@ -82,7 +82,7 @@ button { font: inherit; color: inherit; }
 .telemetry .fix a { color: var(--accent); }
 .telemetry code { font-size: 15px; color: var(--fg); word-break: break-all; }
 
-/* --- pasek stanu (tylko na komputerze) --- */
+/* --- status bar (PC only) --- */
 .statusbar { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: baseline; margin-bottom: 20px; font-size: 20px; color: var(--muted); }
 .statusbar .brand { font-size: 26px; font-weight: 700; color: var(--fg); }
 .statusbar .ok { color: #4cc38a; font-weight: 600; }

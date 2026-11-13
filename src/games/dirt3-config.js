@@ -1,12 +1,12 @@
-// Włączanie i wyłączanie telemetrii w pliku ustawień DiRT 3.
+// Turning telemetry on and off in the DiRT 3 settings file.
 //
-// DiRT 3 Complete Edition z włączoną telemetrią potrafi wyrzucić błąd
-// "sendto failed with error 10038" na mecie (znany błąd gry). Dlatego telemetrię
-// warto włączać tylko na czas jazdy z dashboardem – albo używać poprawki
-// DiRTTelemetryErrorFix (docs/telemetry/codemasters.md).
+// DiRT 3 Complete Edition with telemetry enabled may throw
+// "sendto failed with error 10038" at the finish (a known game bug). So it is worth enabling
+// telemetry only while driving with the dashboard – or using the DiRTTelemetryErrorFix
+// (docs/telemetry/codemasters.md).
 //
-// Gra czyta plik przy starcie i może go nadpisać przy wyjściu, więc zmiany robimy
-// przy zamkniętej grze; zaczynają działać od następnego uruchomienia.
+// The game reads the file at startup and may overwrite it on exit, so changes are made
+// while the game is closed; they take effect from the next launch.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,7 +14,7 @@ import path from 'node:path';
 const RELATIVE = ['My Games', 'DiRT3', 'hardwaresettings', 'hardware_settings_config.xml'];
 const MOTION_RE = /<motion\b[^>]*\/>/;
 
-/** Możliwe położenia pliku: zwykłe Dokumenty i Dokumenty przeniesione do OneDrive. */
+/** Possible file locations: regular Documents and Documents moved to OneDrive. */
 export function candidatePaths(home = os.homedir()) {
   const docs = ['Documents', 'Dokumenty'];
   const roots = [home];
@@ -22,7 +22,7 @@ export function candidatePaths(home = os.homedir()) {
     for (const e of fs.readdirSync(home, { withFileTypes: true })) {
       if (e.isDirectory() && /^OneDrive/i.test(e.name)) roots.push(path.join(home, e.name));
     }
-  } catch { /* brak katalogu domowego */ }
+  } catch { /* no home directory */ }
   return roots.flatMap((r) => docs.map((d) => path.join(r, d, ...RELATIVE)));
 }
 
@@ -30,7 +30,7 @@ export function findConfig(home) {
   return candidatePaths(home).find((p) => fs.existsSync(p)) ?? null;
 }
 
-/** Atrybuty linii <motion .../> albo null. */
+/** Attributes of the <motion .../> line, or null. */
 export function readMotion(xml) {
   const m = xml.match(MOTION_RE);
   if (!m) return null;
@@ -45,14 +45,14 @@ export function readMotion(xml) {
   };
 }
 
-/** Czy ustawienia wysyłają dane tam, gdzie słucha codriver. */
+/** Whether the settings send data to where codriver listens. */
 export function isCodriverReady(motion, port = 20777) {
   return !!motion && motion.enabled && motion.ip === '127.0.0.1' && motion.port === port;
 }
 
-/** Nowa treść pliku z włączoną (pod codriver) albo wyłączoną telemetrią. Reszta pliku bez zmian. */
+/** New file contents with telemetry enabled (for codriver) or disabled. The rest of the file is unchanged. */
 export function setMotion(xml, enabled, port = 20777) {
-  if (!MOTION_RE.test(xml)) throw new Error('W pliku nie ma linii <motion .../>');
+  if (!MOTION_RE.test(xml)) throw new Error('The file has no <motion .../> line');
   const line = enabled
     ? `<motion enabled="true" ip="127.0.0.1" port="${port}" delay="1" extradata="3" />`
     : xml.match(MOTION_RE)[0].replace(/enabled="[^"]*"/, 'enabled="false"');
@@ -60,8 +60,8 @@ export function setMotion(xml, enabled, port = 20777) {
 }
 
 /**
- * Zapisuje zmianę w pliku. Przy pierwszej zmianie robi kopię `.codriver-backup`.
- * Atrybut „tylko do odczytu” zdejmuje na czas zapisu i przywraca.
+ * Writes the change to the file. The first change makes a `.codriver-backup` copy.
+ * A read-only attribute is cleared for the write and restored afterwards.
  * @returns {{ path: string, motion: object }}
  */
 export function applyToFile(file, enabled, port = 20777) {
@@ -79,7 +79,7 @@ export function applyToFile(file, enabled, port = 20777) {
   return { path: file, motion: readMotion(next) };
 }
 
-/** Stan dla interfejsu. */
+/** State for the UI. */
 export function status(port = 20777, file = findConfig()) {
   if (!file) return { found: false };
   const motion = readMotion(fs.readFileSync(file, 'utf8'));

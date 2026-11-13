@@ -1,7 +1,7 @@
-"""Podsumowanie nagrania z tools/udp-listen.ps1: min/max/średnia/liczba różnych wartości każdego pola.
-Pomaga zmapować indeksy telemetrii nowej gry.
+"""Summary of a tools/udp-listen.ps1 recording: min/max/mean/number of distinct values per field.
+Helps map the telemetry indices of a new game.
 
-Użycie: python tools/analyze-csv.py nagranie.csv
+Usage: python tools/analyze-csv.py recording.csv
 """
 import csv
 import statistics
@@ -13,14 +13,14 @@ with open(sys.argv[1], encoding="utf-8-sig") as fh:
     rows = []
     for row in reader:
         if len(row) != len(head):
-            continue  # ostatni wiersz bywa ucięty, jeśli nagrywanie trwało
+            continue  # the last row may be cut off if recording was still running
         try:
             rows.append([float(x) for x in row])
         except ValueError:
             pass
 
-print(f"{len(rows)} pakietów, {int(rows[0][1])} B na pakiet")
-print(f"{'pole':>5} {'min':>12} {'max':>12} {'średnia':>12} {'różnych':>8}")
+print(f"{len(rows)} packets, {int(rows[0][1])} B per packet")
+print(f"{'field':>5} {'min':>12} {'max':>12} {'mean':>12} {'distinct':>8}")
 for c in range(2, len(head)):
     col = [r[c] for r in rows]
     finite = [v for v in col if v == v and abs(v) != float("inf")]

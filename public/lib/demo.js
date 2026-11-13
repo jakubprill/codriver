@@ -1,7 +1,7 @@
-// Dane pokazowe: rozpędzanie na kolejnych biegach, hamowanie, redukcje – w pętli.
-// Służą do podglądu motywów bez gry (ekran wyboru, ?demo).
+// Sample data: accelerating through the gears, braking, downshifts – in a loop.
+// Used to preview themes without the game (picker, ?demo).
 
-const RATIO = [0, 69.6, 25.6, 18.1, 13.4, 10.6]; // rad/s na m/s, z nagrania DiRT 3
+const RATIO = [0, 69.6, 25.6, 18.1, 13.4, 10.6]; // rad/s per m/s, from a DiRT 3 recording
 const MAX = 6583;
 const IDLE = 1200;
 const RAD = 60 / (2 * Math.PI);

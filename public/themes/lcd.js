@@ -1,5 +1,5 @@
-// F · LCD – zielonkawy wyświetlacz ciekłokrystaliczny z cyframi siedmiosegmentowymi,
-// jak w samochodzie z lat 90. Wygaszone segmenty prześwitują, tak jak w prawdziwym LCD.
+// F · LCD – a greenish liquid-crystal display with seven-segment digits,
+// like a 1990s car. Unlit segments show faintly, as on a real LCD.
 import { h, s, useFont, useStyle, rpmInfo, fmtTime, clamp, blinkOn, ZONES } from '../lib/util.js';
 
 const C = { bezel: '#1c1f1a', glass: '#b9c6a5', glass2: '#a9b794', on: '#1c2617', ghost: 'rgba(28, 38, 23, 0.08)', label: '#4c5a43' };
@@ -13,7 +13,7 @@ const CSS = `
 .t-lcd .status { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-size: 30px; color: ${C.label}; }
 `;
 
-// --- cyfry siedmiosegmentowe ---
+// --- seven-segment digits ---
 const MAP = {
   0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg',
   '-': 'g', n: 'ceg', r: 'eg', ' ': '',
@@ -30,7 +30,7 @@ function segments(w, ht, t) {
   };
 }
 
-/** Wyświetlacz `count` cyfr; zwraca {svg, set(text)} – tekst wyrównany do prawej. */
+/** A display of `count` digits; returns {svg, set(text)} – text is right-aligned. */
 function sevenSeg({ count, w, h: ht, gap, x, y }) {
   const t = w * 0.2;
   const shape = segments(w, ht, t);
@@ -64,12 +64,12 @@ const N_BARS = 32;
 export default {
   id: 'lcd',
   name: 'LCD',
-  description: 'Zielonkawy ciekłokrystaliczny z cyframi jak w kalkulatorze',
+  description: 'Greenish LCD with calculator-style digits',
   create(stage) {
     useFont('Share+Tech+Mono');
     useStyle('lcd', CSS);
 
-    // słupkowy obrotomierz: wąskie prostokąty rosnące ku prawej
+    // bar tachometer: narrow rectangles growing to the right
     const barsSvg = s('svg', { width: 1400, height: 130, style: 'left:64px;top:56px', 'aria-hidden': 'true' });
     const bars = [];
     for (let i = 0; i < N_BARS; i++) {
@@ -81,7 +81,7 @@ export default {
     const redMark = s('rect', { x: 0, y: 0, width: 0, height: 6, fill: C.on });
     barsSvg.append(redMark);
 
-    // strzałka "zmień bieg"
+    // "shift up" arrow
     const arrow = s('svg', { width: 90, height: 110, style: 'left:1238px;top:250px', 'aria-hidden': 'true' },
       s('polygon', { points: '45,0 90,55 62,55 62,110 28,110 28,55 0,55', fill: C.ghost }));
     const arrowPoly = arrow.firstChild;
@@ -90,18 +90,18 @@ export default {
     const gear = sevenSeg({ count: 1, w: 190, h: 380, gap: 0, x: 640, y: 220 });
     const rpm = sevenSeg({ count: 4, w: 62, h: 120, gap: 14, x: 1180, y: 420 });
     const time = sevenSeg({ count: 4, w: 40, h: 76, gap: 22, x: 70, y: 580 });
-    // dwukropek między minutami a sekundami
+    // colon between minutes and seconds
     time.svg.append(s('rect', { x: 112, y: 22, width: 8, height: 8, fill: C.on }), s('rect', { x: 109, y: 48, width: 8, height: 8, fill: C.on }));
     const status = h('div', { class: 'status' });
 
     const glass = h('div', { class: 'glass' },
       barsSvg,
-      h('div', { class: 'lab', style: 'left:64px;top:196px' }, 'obr/min ×1000'),
+      h('div', { class: 'lab', style: 'left:64px;top:196px' }, 'rpm ×1000'),
       speed.svg, h('div', { class: 'lab', style: 'left:70px;top:516px' }, 'km/h'),
-      gear.svg, h('div', { class: 'lab', style: 'left:640px;top:612px' }, 'bieg'),
-      arrow, h('div', { class: 'lab', style: 'left:1214px;top:366px' }, 'zmiana'),
-      rpm.svg, h('div', { class: 'lab', style: 'left:1180px;top:548px' }, 'obr/min'),
-      time.svg, h('div', { class: 'lab', style: 'left:70px;top:666px' }, 'czas  min:s'),
+      gear.svg, h('div', { class: 'lab', style: 'left:640px;top:612px' }, 'gear'),
+      arrow, h('div', { class: 'lab', style: 'left:1214px;top:366px' }, 'shift'),
+      rpm.svg, h('div', { class: 'lab', style: 'left:1180px;top:548px' }, 'rpm'),
+      time.svg, h('div', { class: 'lab', style: 'left:70px;top:666px' }, 'time  min:s'),
       status);
     stage.append(h('div', { class: 't-lcd' }, glass));
 
