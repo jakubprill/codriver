@@ -4,6 +4,7 @@
 //
 //   node src/main.js [--udp 20777] [--http 80] [--name codriver] [--open]
 //   node src/main.js --telemetry on|off|status   – telemetria w ustawieniach DiRT 3, bez startu serwera
+//   node src/main.js --launch-dirt3              – dodatkowo uruchamia poprawkę błędu 10038 i grę
 //
 // Bez --http próbuje portu 80 (adres bez numeru: http://codriver.local), a gdy jest zajęty – 8080.
 import dgram from 'node:dgram';
@@ -16,6 +17,7 @@ import { createHttpServer } from './server/http.js';
 import { startMdns, lanInterfaces } from './server/mdns.js';
 import { qrTerminal } from '../public/lib/qr.js';
 import * as dirt3Config from './games/dirt3-config.js';
+import { launchDirt3 } from './games/dirt3-launcher.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 // eslint-disable-next-line no-undef
@@ -28,6 +30,8 @@ try {
 } catch {
   /* brak = tryb deweloperski */
 }
+// Folder aplikacji: przy pliku .exe – jego folder, w trybie deweloperskim – katalog repozytorium.
+const appDir = assets ? path.dirname(process.execPath) : path.resolve(here, '..');
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(`--${name}`);
@@ -60,6 +64,18 @@ function telemetryCommand(cmd) {
   return 0;
 }
 
+if (process.argv.includes('--launch-dirt3')) {
+  try {
+    const r = launchDirt3({ appDir, udpPort: UDP_PORT });
+    console.log(`Telemetria: ${r.telemetry ? 'włączona' : 'nie znaleziono ustawień gry'}`);
+    console.log(r.fix ? `Poprawka błędu 10038: ${r.fix}` : 'Poprawka błędu 10038: nie znaleziono (docs/telemetry/codemasters.md)');
+    console.log('DiRT 3: uruchamiam przez Steam…');
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+}
+
 const state = new TelemetryState();
 
 // --- UDP ---
@@ -89,7 +105,7 @@ function addresses() {
 }
 
 // --- HTTP ---
-const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state, info: addresses, udpPort: UDP_PORT });
+const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state, info: addresses, udpPort: UDP_PORT, appDir });
 
 function listen(ports) {
   const [port, ...rest] = ports;

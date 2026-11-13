@@ -138,37 +138,56 @@ async function showConnect(slot) {
       h('p', { class: 'hint' }, 'Urządzenie musi być w tej samej sieci Wi-Fi co ten komputer.'))));
 }
 
-/** Karta „Telemetria w DiRT 3”: włącza/wyłącza wysyłanie danych w ustawieniach gry (tylko na komputerze). */
-async function showTelemetry(slot) {
+/** Karta „DiRT 3” na komputerze: przycisk startu gry, przełącznik telemetrii, stan poprawki błędu 10038. */
+async function showTelemetry(slot, note = '') {
   let st;
   try { st = await (await fetch('/api/dirt3/telemetry')).json(); } catch { return; }
   if (!st.found) return;
   const on = !!st.motion?.enabled;
-  const button = h('button', { class: 'toggle', type: 'button' }, on ? 'Wyłącz telemetrię' : 'Włącz telemetrię');
-  const msg = h('p', { class: 'hint', role: 'status' });
-  button.addEventListener('click', async () => {
-    button.disabled = true;
-    try {
-      const res = await fetch('/api/dirt3/telemetry', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: !on }),
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error);
-      await showTelemetry(slot);
-      slot.querySelector('.hint').textContent = 'Zapisane. Zmiana zadziała po ponownym uruchomieniu gry.';
-    } catch (e) {
+  const msg = h('p', { class: 'hint', role: 'status' }, note);
+
+  const post = async (url, body) => {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error);
+    return json;
+  };
+  const action = (button, run) => button.addEventListener('click', async () => {
+    slot.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    try { await showTelemetry(slot, await run()); } catch (e) {
       msg.textContent = e.message;
-      button.disabled = false;
+      slot.querySelectorAll('button').forEach((b) => { b.disabled = false; });
     }
   });
+
+  const buttons = [];
+  if (st.canLaunch) {
+    const launch = h('button', { class: 'toggle primary', type: 'button' }, 'Uruchom DiRT 3');
+    action(launch, async () => {
+      const r = await post('/api/dirt3/launch');
+      return r.fix ? 'Gra startuje przez Steam, poprawka czuwa w tle.' : 'Gra startuje przez Steam – bez poprawki błąd 10038 może wrócić na mecie.';
+    });
+    buttons.push(launch);
+  }
+  const toggle = h('button', { class: 'toggle', type: 'button' }, on ? 'Wyłącz telemetrię' : 'Włącz telemetrię');
+  action(toggle, async () => {
+    await post('/api/dirt3/telemetry', { enabled: !on });
+    return 'Zapisane. Zmiana zadziała po ponownym uruchomieniu gry.';
+  });
+  buttons.push(toggle);
+
+  const fix = st.fix?.found
+    ? h('p', { class: 'fix ok' }, 'Poprawka błędu „sendto failed 10038”: gotowa – „Uruchom DiRT 3” włączy ją razem z grą.')
+    : h('p', { class: 'fix' }, 'Poprawka błędu „sendto failed 10038”: brak. ',
+      h('a', { href: st.fix?.download, target: '_blank', rel: 'noopener' }, 'Pobierz ZIP'),
+      ' i rozpakuj do: ', h('code', {}, st.fix?.suggestedDir ?? ''));
+
   slot.replaceChildren(h('div', { class: 'telemetry' },
     h('div', {},
-      h('h2', {}, 'Telemetria w DiRT 3: ', h('span', { class: on ? 'on' : 'off' }, on ? (st.ready ? 'włączona' : 'włączona, ale nie dla codriver') : 'wyłączona')),
-      h('p', {}, on
-        ? 'DiRT 3 Complete Edition z włączoną telemetrią potrafi pokazać błąd „sendto failed 10038” na mecie. Wyłącz ją, gdy grasz bez dashboardu, albo użyj poprawki DiRTTelemetryErrorFix.'
-        : 'Włącz, żeby gra wysyłała dane do dashboardu. Zamknij grę przed zmianą.'),
+      h('h2', {}, 'DiRT 3 – telemetria: ', h('span', { class: on ? 'on' : 'off' }, on ? (st.ready ? 'włączona' : 'włączona, ale nie dla codriver') : 'wyłączona')),
+      fix,
       msg),
-    button));
+    h('div', { class: 'actions' }, buttons)));
 }
 
 function goFullscreen() {

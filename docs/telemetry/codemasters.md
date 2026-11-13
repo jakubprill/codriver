@@ -23,12 +23,20 @@ i się zawiesić. To błąd gry (wysyła dane przez zamknięte gniazdo), nie cod
 Co z tym zrobić:
 
 1. **Wyłączaj telemetrię, gdy grasz bez dashboardu.** Na komputerze: ekran wyboru codriver → karta
-   „Telemetria w DiRT 3” → „Wyłącz telemetrię”, albo `codriver --telemetry off` (`on` włącza, `status` pokazuje stan).
+   „DiRT 3” → „Wyłącz telemetrię”, albo `codriver --telemetry off` (`on` włącza, `status` pokazuje stan).
    Zmiana działa od następnego uruchomienia gry; przy pierwszej zmianie powstaje kopia `hardware_settings_config.xml.codriver-backup`.
-2. **Poprawka społeczności [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (polecana też przez SimHub).
-   Przechwytuje w grze funkcję `sendto` i zamienia błąd 10038 na zwykły wynik. Repozytorium nie ma wydań – pobierz je
-   jako ZIP (Code → Download ZIP), rozpakuj do osobnego folderu, uruchom `DiRTTelemetryErrorFix.exe`
-   i w ciągu 30 sekund uruchom grę. Trzeba to robić przed każdym startem gry.
+2. **Poprawka społeczności [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (MIT, polecana też przez SimHub).
+   Wstrzykuje do procesu gry bibliotekę EasyHook i podmienia funkcję `sendto`: gdy gra dostaje błąd 10038,
+   poprawka zwraca jej zwykły wynik. Czeka do 30 s na start gry i sama się zamyka po wyjściu z gry.
+
+   **Z codriverem:** pobierz [DiRTTelemetryErrorFix_Release.zip](https://github.com/RoccoC/DiRTTelemetryErrorFix/blob/master/bin/DiRTTelemetryErrorFix_Release.zip?raw=true)
+   i rozpakuj do `tools\DiRTTelemetryErrorFix` obok codrivera (przy `codriver.exe`: do `DiRTTelemetryErrorFix` obok pliku,
+   albo wskaż folder zmienną `CODRIVER_DIRT3_FIX`). Potem przycisk **„Uruchom DiRT 3”** na ekranie wyboru
+   (albo `codriver --launch-dirt3`) włączy telemetrię, uruchomi poprawkę i grę przez Steam.
+
+   Dlaczego codriver nie naprawia tego sam: błąd dzieje się w kodzie gry, zanim dane opuszczą komputer.
+   Naprawa wymaga wstrzyknięcia natywnego kodu do procesu gry – to nie pasuje do lekkiej aplikacji bez zależności,
+   więc korzystamy z istniejącej, sprawdzonej poprawki.
 
 DiRT Rally tego błędu nie ma.
 
