@@ -1,87 +1,90 @@
-# Telemetria Codemasters (DiRT 3, DiRT Rally)
+# Codemasters telemetry (DiRT 3, DiRT Rally)
 
-Gry Codemasters wysyłają pakiet UDP z tablicą `float32` little-endian.
+Codemasters games send a UDP packet containing an array of little-endian `float32` values.
 
-## Włączenie
+## Enabling it
 
-`Dokumenty\My Games\<gra>\hardwaresettings\hardware_settings_config.xml` (z OneDrive: `OneDrive\Dokumenty\…`):
+`Documents\My Games\<game>\hardwaresettings\hardware_settings_config.xml` (with OneDrive: `OneDrive\Documents\…`, on a Polish
+system `Dokumenty`):
 
 ```xml
 <motion enabled="true" ip="127.0.0.1" port="20777" delay="1" extradata="3" />
 ```
 
-- Domyślnie gra ma `ip="dbox"` (sprzęt D-Box) i `extradata="0"` – trzeba to zmienić.
-- Plik bywa oznaczony „tylko do odczytu”, żeby gra go nie nadpisała: zdejmij atrybut, zmień, możesz założyć ponownie.
-- Gra wysyła dane tylko w trakcie jazdy, nie w menu.
+- By default the game has `ip="dbox"` (D-Box hardware) and `extradata="0"` – this has to change.
+- The file is sometimes marked read-only so the game doesn't overwrite it: clear the flag, edit, set it again if you like.
+  codriver does this for you (`codriver --telemetry on|off|status`, or the DiRT 3 card in the panel).
+- The game sends data only while driving, not in menus.
 
-## Znany błąd DiRT 3 Complete Edition: „sendto failed with error 10038”
+## Known DiRT 3 Complete Edition bug: “sendto failed with error 10038”
 
-Z włączoną telemetrią DiRT 3 Complete Edition (wersja ze Steamworks) potrafi po każdym odcinku pokazać
-okno „sendto failed with error 10038: An operation was attempted on something that is not a socket”
-i się zawiesić. To błąd gry (wysyła dane przez zamknięte gniazdo), nie codrivera – występuje też bez niego.
+With telemetry enabled, DiRT 3 Complete Edition (the Steamworks version) may show
+“sendto failed with error 10038: An operation was attempted on something that is not a socket”
+after every stage and hang. This is a game bug (it sends data through a socket it has already closed), not a codriver bug –
+it happens without codriver too.
 
-Co z tym zrobić:
+What to do about it:
 
-1. **Wyłączaj telemetrię, gdy grasz bez dashboardu.** Na komputerze: ekran wyboru codriver → karta
-   „DiRT 3” → „Wyłącz telemetrię”, albo `codriver --telemetry off` (`on` włącza, `status` pokazuje stan).
-   Zmiana działa od następnego uruchomienia gry; przy pierwszej zmianie powstaje kopia `hardware_settings_config.xml.codriver-backup`.
-2. **Poprawka społeczności [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (MIT, polecana też przez SimHub).
-   Wstrzykuje do procesu gry bibliotekę EasyHook i podmienia funkcję `sendto`: gdy gra dostaje błąd 10038,
-   poprawka zwraca jej zwykły wynik. Czeka do 30 s na start gry i sama się zamyka po wyjściu z gry.
+1. **Turn telemetry off when you play without the dashboard.** On the PC: codriver panel → **DiRT 3** card →
+   “Wyłącz telemetrię” (turn off), or `codriver --telemetry off` (`on` enables it, `status` shows the state).
+   The change applies from the next game launch; the first change creates a `hardware_settings_config.xml.codriver-backup` copy.
+2. **Community fix [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (MIT, also recommended by SimHub).
+   It injects the EasyHook library into the game process and wraps `sendto`: when the game gets error 10038,
+   the fix returns a normal result instead. It waits up to 30 s for the game to start and exits on its own when the game closes.
 
-   **Z codriverem:** pobierz [DiRTTelemetryErrorFix_Release.zip](https://github.com/RoccoC/DiRTTelemetryErrorFix/blob/master/bin/DiRTTelemetryErrorFix_Release.zip?raw=true)
-   i rozpakuj do `tools\DiRTTelemetryErrorFix` obok codrivera (przy `codriver.exe`: do `DiRTTelemetryErrorFix` obok pliku,
-   albo wskaż folder zmienną `CODRIVER_DIRT3_FIX`). Potem przycisk **„Uruchom DiRT 3”** na ekranie wyboru
-   (albo `codriver --launch-dirt3`) włączy telemetrię, uruchomi poprawkę i grę przez Steam.
+   **With codriver:** download [DiRTTelemetryErrorFix_Release.zip](https://github.com/RoccoC/DiRTTelemetryErrorFix/blob/master/bin/DiRTTelemetryErrorFix_Release.zip?raw=true)
+   and extract it to `tools\DiRTTelemetryErrorFix` in the codriver folder (with `codriver.exe`: to a `DiRTTelemetryErrorFix`
+   folder next to the file, or point to it with the `CODRIVER_DIRT3_FIX` environment variable). Then the **“Uruchom DiRT 3”**
+   (Launch DiRT 3) button in the panel – or `codriver --launch-dirt3` – enables telemetry, starts the fix and launches the game via Steam.
 
-   Dlaczego codriver nie naprawia tego sam: błąd dzieje się w kodzie gry, zanim dane opuszczą komputer.
-   Naprawa wymaga wstrzyknięcia natywnego kodu do procesu gry – to nie pasuje do lekkiej aplikacji bez zależności,
-   więc korzystamy z istniejącej, sprawdzonej poprawki.
+   Why codriver doesn't fix this itself: the error happens inside the game's code, before the data leaves the PC.
+   Fixing it requires injecting native code into the game process – that doesn't fit a lightweight, dependency-free app,
+   so codriver relies on the existing, proven fix.
 
-DiRT Rally tego błędu nie ma.
+DiRT Rally does not have this bug.
 
-## DiRT 3 – zweryfikowane 13.11.2026
+## DiRT 3 – verified on 2026-11-13
 
-Pakiet: **152 B = 38 pól**, ok. 170 pakietów/s. `extradata=3` nie dokłada pól (max obrotów brak).
-Nagranie: `test/fixtures/dirt3-2026-11-13.csv` (co 12. pakiet z 30 s jazdy, automatyczna skrzynia, biegi 1–4).
+Packet: **152 bytes = 38 fields**, about 170 packets per second. `extradata=3` adds no fields (no max RPM).
+Recording: `test/fixtures/dirt3-2026-11-13.csv` (every 12th packet of a 30 s drive, automatic gearbox, gears 1–4).
 
-| Indeks | Pole | Jednostka / uwagi |
+| Index | Field | Unit / notes |
 |---|---|---|
-| 0 | czas gry | s |
-| 1 | czas okrążenia/odcinka | s |
-| 2 | dystans okrążenia | m |
-| 3 | dystans całkowity | |
-| 4–6 | pozycja x, y, z | m |
-| **7** | **prędkość** | m/s (×3,6 = km/h) |
-| 8–10 | prędkość x, y, z | m/s |
-| 11–16 | wektory obrotu i pochylenia | |
-| 17–20 | położenie zawieszenia | |
-| 21–24 | prędkość zawieszenia | |
-| 25–28 | prędkość kół | m/s |
-| **29** | **gaz** | 0..1 |
-| 30 | skręt | −1..1 |
-| **31** | **hamulec** | 0..1 |
-| 32 | sprzęgło | 0..1 |
-| **33** | **bieg** | 1..n; luz i wsteczny jeszcze niezweryfikowane |
-| 34 | przeciążenie poprzeczne | g; na starcie bywa −inf |
-| 35 | przeciążenie wzdłużne | g; na starcie bywa −inf |
-| 36 | okrążenie | |
-| **37** | **obroty silnika** | **rad/s** (×60/2π = obr/min); 125,66 = 1200 obr/min na biegu jałowym |
+| 0 | game time | s |
+| 1 | lap/stage time | s |
+| 2 | lap distance | m |
+| 3 | total distance | |
+| 4–6 | position x, y, z | m |
+| **7** | **speed** | m/s (×3.6 = km/h) |
+| 8–10 | velocity x, y, z | m/s |
+| 11–16 | roll and pitch vectors | |
+| 17–20 | suspension position | |
+| 21–24 | suspension velocity | |
+| 25–28 | wheel speed | m/s |
+| **29** | **throttle** | 0..1 |
+| 30 | steering | −1..1 |
+| **31** | **brake** | 0..1 |
+| 32 | clutch | 0..1 |
+| **33** | **gear** | 1..n; neutral and reverse not verified yet |
+| 34 | lateral g-force | g; may be −inf at the start |
+| 35 | longitudinal g-force | g; may be −inf at the start |
+| 36 | lap | |
+| **37** | **engine rate** | **rad/s** (×60/2π = RPM); 125.66 = 1200 RPM at idle |
 
-Sprawdzenie: zmiany biegów automatu przy ~6400 obr/min, odcięcie 6583 obr/min,
-stosunek obrotów do prędkości maleje z każdym biegiem (70 → 26 → 18 → 13 rad/s na m/s).
+Cross-check: the automatic gearbox shifts at ~6400 RPM, the limiter is at 6583 RPM,
+and the RPM-to-speed ratio drops with every gear (70 → 26 → 18 → 13 rad/s per m/s).
 
-## DiRT Rally – do sprawdzenia w praktyce
+## DiRT Rally – to be verified in practice
 
-Ten sam układ pierwszych 38 pól; z `extradata=3` pakiet ma **264 B = 66 pól**. Różnice wg opisów społeczności:
+Same layout for the first 38 fields; with `extradata=3` the packet has **264 bytes = 66 fields**. Differences according to community notes:
 
-| Indeks | Pole | Uwagi |
+| Index | Field | Notes |
 |---|---|---|
-| 37 | obroty silnika | **obr/min ÷ 10** (inaczej niż DiRT 3) |
-| 63 | maksymalne obroty | obr/min ÷ 10 |
-| 64 | obroty biegu jałowego | obr/min ÷ 10 |
-| 65 | liczba biegów | |
-| 33 | bieg | wsteczny = 10 |
+| 37 | engine rate | **RPM ÷ 10** (unlike DiRT 3) |
+| 63 | max RPM | RPM ÷ 10 |
+| 64 | idle RPM | RPM ÷ 10 |
+| 65 | number of gears | |
+| 33 | gear | reverse = 10 |
 
-Parser rozpoznaje DiRT Rally po długości pakietu (≥ 64 pola). Do zrobienia: nagranie z jazdy
-(`tools/udp-listen.ps1`) i test na nim, tak jak dla DiRT 3.
+The parser detects DiRT Rally by packet length (≥ 64 fields). To do: a recorded drive
+(`tools/udp-listen.ps1`) and a test based on it, as for DiRT 3.
