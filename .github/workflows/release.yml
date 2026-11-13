@@ -1,0 +1,30 @@
+name: Release
+
+# Wydanie nowej wersji:
+#   1. podbij "version" w package.json (np. 0.2.0) i zrób commit
+#   2. git tag v0.2.0 && git push --tags
+# GitHub zbuduje codriver.exe i dołączy go do strony Releases.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Wersja z tagu musi zgadzać się z package.json
+        run: |
+          PKG=$(bun -e "console.log(require('./package.json').version)")
+          [ "v$PKG" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} ≠ package.json v$PKG"; exit 1; }
+      - run: bun test
+      - name: Kompilacja codriver.exe
+        run: bun scripts/build.js --target=bun-windows-x64
+      - name: Wydanie na GitHubie
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/codriver.exe --title "codriver ${GITHUB_REF_NAME}" --generate-notes
