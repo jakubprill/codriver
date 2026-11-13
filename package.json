@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "description": "Dashboard telemetrii z gier wyścigowych na drugi monitor, telefon i tablet",
   "type": "module",
-  "private": true,
-  "license": "UNLICENSED",
+  "license": "Unlicense",
   "engines": {
     "node": ">=18"
   },
@@ -15,5 +14,9 @@
     "test": "node --test",
     "build": "bun scripts/build.js",
     "build:windows": "bun scripts/build.js --target=bun-windows-x64"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakubprill/codriver"
   }
 }
