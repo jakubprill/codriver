@@ -3,6 +3,7 @@
 // Działa na Node.js >= 18 i na Bun, bez żadnych zależności.
 //
 //   node src/main.js [--udp 20777] [--http 80] [--name codriver] [--open]
+//   node src/main.js --telemetry on|off|status   – telemetria w ustawieniach DiRT 3, bez startu serwera
 //
 // Bez --http próbuje portu 80 (adres bez numeru: http://codriver.local), a gdy jest zajęty – 8080.
 import dgram from 'node:dgram';
@@ -14,6 +15,7 @@ import { TelemetryState } from './telemetry.js';
 import { createHttpServer } from './server/http.js';
 import { startMdns, lanInterfaces } from './server/mdns.js';
 import { qrTerminal } from '../public/lib/qr.js';
+import * as dirt3Config from './games/dirt3-config.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 // eslint-disable-next-line no-undef
@@ -37,6 +39,26 @@ const game = codemasters;
 const UDP_PORT = Number(arg('udp', game.defaultPort));
 const HTTP_PORTS = arg('http') ? [Number(arg('http'))] : [80, 8080];
 const HOSTNAME = `${arg('name', 'codriver')}.local`;
+
+// --- tryb jednorazowy: przełącznik telemetrii w grze ---
+const telemetryArg = arg('telemetry');
+if (telemetryArg) {
+  process.exit(telemetryCommand(telemetryArg));
+}
+
+function telemetryCommand(cmd) {
+  const file = dirt3Config.findConfig();
+  if (!file) {
+    console.error('Nie znaleziono pliku ustawień DiRT 3 (Dokumenty\\My Games\\DiRT3\\hardwaresettings). Uruchom grę raz.');
+    return 1;
+  }
+  if (cmd === 'on' || cmd === 'off') dirt3Config.applyToFile(file, cmd === 'on', UDP_PORT);
+  else if (cmd !== 'status') { console.error('Użycie: --telemetry on|off|status'); return 1; }
+  const st = dirt3Config.status(UDP_PORT, file);
+  console.log(`${st.path}\nTelemetria: ${st.motion?.enabled ? 'włączona' : 'wyłączona'}${st.ready ? ' (gotowa dla codriver)' : ''}`);
+  if (cmd !== 'status') console.log('Zmiana zadziała po ponownym uruchomieniu gry.');
+  return 0;
+}
 
 const state = new TelemetryState();
 
@@ -67,7 +89,7 @@ function addresses() {
 }
 
 // --- HTTP ---
-const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state, info: addresses });
+const { server, clients } = createHttpServer({ publicDir: path.join(here, '..', 'public'), assets, state, info: addresses, udpPort: UDP_PORT });
 
 function listen(ports) {
   const [port, ...rest] = ports;

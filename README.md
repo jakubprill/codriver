@@ -28,6 +28,10 @@ Działa z **DiRT 3**. **DiRT Rally** ma ten sam format telemetrii – wsparcie c
 
    `codriver.local` działa na iPhonie, iPadzie i komputerach; na części Androidów trzeba użyć adresu IP z kodu QR.
 
+> **DiRT 3 Complete Edition** z włączoną telemetrią potrafi pokazać błąd „sendto failed 10038” na mecie – to znany błąd gry.
+> codriver ma przełącznik, który wyłącza telemetrię, gdy grasz bez dashboardu; jest też poprawka społeczności.
+> Szczegóły: [docs/telemetry/codemasters.md](docs/telemetry/codemasters.md).
+
 Bez gry: `bun run replay` odtwarza nagranie z jazdy, a `http://localhost:8080/?demo` pokazuje dane przykładowe.
 
 ## Dla programistów

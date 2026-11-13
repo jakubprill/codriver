@@ -66,6 +66,7 @@ i zeruje po 5 s przerwy w danych (nowy odcinek, inne auto).
 |---|---|
 | `src/main.js` | start: UDP + HTTP + mDNS, kod QR w konsoli, `--open`, `--udp`, `--http`, `--name` |
 | `src/games/codemasters.js` | parser pakietów Codemasters (DiRT 3, DiRT Rally) |
+| `src/games/dirt3-config.js` | włączanie i wyłączanie telemetrii w ustawieniach DiRT 3 (`/api/dirt3/telemetry`, `--telemetry`) |
 | `src/telemetry.js` | stan: ostatnia ramka, nauka max obrotów, `live` |
 | `src/server/http.js` | pliki, `/events` (SSE), `/status` i `/info` (JSON) |
 | `src/server/mdns.js` | odpowiedzi mDNS dla `codriver.local` |

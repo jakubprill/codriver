@@ -14,6 +14,24 @@ Gry Codemasters wysyłają pakiet UDP z tablicą `float32` little-endian.
 - Plik bywa oznaczony „tylko do odczytu”, żeby gra go nie nadpisała: zdejmij atrybut, zmień, możesz założyć ponownie.
 - Gra wysyła dane tylko w trakcie jazdy, nie w menu.
 
+## Znany błąd DiRT 3 Complete Edition: „sendto failed with error 10038”
+
+Z włączoną telemetrią DiRT 3 Complete Edition (wersja ze Steamworks) potrafi po każdym odcinku pokazać
+okno „sendto failed with error 10038: An operation was attempted on something that is not a socket”
+i się zawiesić. To błąd gry (wysyła dane przez zamknięte gniazdo), nie codrivera – występuje też bez niego.
+
+Co z tym zrobić:
+
+1. **Wyłączaj telemetrię, gdy grasz bez dashboardu.** Na komputerze: ekran wyboru codriver → karta
+   „Telemetria w DiRT 3” → „Wyłącz telemetrię”, albo `codriver --telemetry off` (`on` włącza, `status` pokazuje stan).
+   Zmiana działa od następnego uruchomienia gry; przy pierwszej zmianie powstaje kopia `hardware_settings_config.xml.codriver-backup`.
+2. **Poprawka społeczności [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (polecana też przez SimHub).
+   Przechwytuje w grze funkcję `sendto` i zamienia błąd 10038 na zwykły wynik. Repozytorium nie ma wydań – pobierz je
+   jako ZIP (Code → Download ZIP), rozpakuj do osobnego folderu, uruchom `DiRTTelemetryErrorFix.exe`
+   i w ciągu 30 sekund uruchom grę. Trzeba to robić przed każdym startem gry.
+
+DiRT Rally tego błędu nie ma.
+
 ## DiRT 3 – zweryfikowane 13.11.2026
 
 Pakiet: **152 B = 38 pól**, ok. 170 pakietów/s. `extradata=3` nie dokłada pól (max obrotów brak).

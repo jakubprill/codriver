@@ -50,15 +50,20 @@ function showPicker() {
   });
 
   const connect = h('div');
+  const telemetry = h('div');
   app.replaceChildren(h('section', { class: 'picker' },
     connect,
+    telemetry,
     h('h1', {}, 'Wybierz wyświetlacz'),
     h('p', { class: 'lead' }, 'Każde urządzenie zapamięta swój wybór. Zmienisz go w każdej chwili przyciskiem w rogu dashboardu.'),
     h('div', { class: 'grid' }, cards),
     h('p', { class: 'foot' }, 'Podgląd pokazuje dane przykładowe.')));
 
   // na komputerze z codriverem: kod QR dla telefonu
-  if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) showConnect(connect);
+  if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+    showConnect(connect);
+    showTelemetry(telemetry);
+  }
 
   // podglądy rysują się na żywo danymi pokazowymi
   const views = previews.map(({ preview, t }) => t.create(createStage(preview)));
@@ -131,6 +136,39 @@ async function showConnect(slot) {
       info.name ? h('p', { class: 'addr' }, info.name) : null,
       h('p', { class: info.name ? 'addr alt' : 'addr' }, url),
       h('p', { class: 'hint' }, 'Urządzenie musi być w tej samej sieci Wi-Fi co ten komputer.'))));
+}
+
+/** Karta „Telemetria w DiRT 3”: włącza/wyłącza wysyłanie danych w ustawieniach gry (tylko na komputerze). */
+async function showTelemetry(slot) {
+  let st;
+  try { st = await (await fetch('/api/dirt3/telemetry')).json(); } catch { return; }
+  if (!st.found) return;
+  const on = !!st.motion?.enabled;
+  const button = h('button', { class: 'toggle', type: 'button' }, on ? 'Wyłącz telemetrię' : 'Włącz telemetrię');
+  const msg = h('p', { class: 'hint', role: 'status' });
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    try {
+      const res = await fetch('/api/dirt3/telemetry', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: !on }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error);
+      await showTelemetry(slot);
+      slot.querySelector('.hint').textContent = 'Zapisane. Zmiana zadziała po ponownym uruchomieniu gry.';
+    } catch (e) {
+      msg.textContent = e.message;
+      button.disabled = false;
+    }
+  });
+  slot.replaceChildren(h('div', { class: 'telemetry' },
+    h('div', {},
+      h('h2', {}, 'Telemetria w DiRT 3: ', h('span', { class: on ? 'on' : 'off' }, on ? (st.ready ? 'włączona' : 'włączona, ale nie dla codriver') : 'wyłączona')),
+      h('p', {}, on
+        ? 'DiRT 3 Complete Edition z włączoną telemetrią potrafi pokazać błąd „sendto failed 10038” na mecie. Wyłącz ją, gdy grasz bez dashboardu, albo użyj poprawki DiRTTelemetryErrorFix.'
+        : 'Włącz, żeby gra wysyłała dane do dashboardu. Zamknij grę przed zmianą.'),
+      msg),
+    button));
 }
 
 function goFullscreen() {
