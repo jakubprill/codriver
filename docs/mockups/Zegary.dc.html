@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Zegary – analogowe tarcze</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#ff6a1a}a:hover{color:#ffa06b}
+</style>
+</helmet>
+<div style="width: 1600px; height: 800px; position: relative; overflow: hidden; background: #15120f; color: #efe6d2; font-family: 'Archivo Narrow', sans-serif; font-variant-numeric: tabular-nums">
+
+  <svg viewBox="0 0 640 640" width="640" height="640" style="position: absolute; left: 70px; top: 70px" role="img" aria-label="Prędkościomierz: 112 km/h">
+    <circle cx="320" cy="320" r="306" fill="#1d1915" stroke="#2c2620" stroke-width="4"></circle>
+    <sc-for list="{{spdTicks}}" as="t" hint-placeholder-count="41">
+      <line x1="{{t.x1}}" y1="{{t.y1}}" x2="{{t.x2}}" y2="{{t.y2}}" stroke="{{t.c}}" stroke-width="{{t.w}}" stroke-linecap="round"></line>
+    </sc-for>
+    <sc-for list="{{spdNums}}" as="n" hint-placeholder-count="11">
+      <text x="{{n.x}}" y="{{n.y}}" fill="#efe6d2" font-size="34" font-weight="600" text-anchor="middle" dominant-baseline="central">{{n.label}}</text>
+    </sc-for>
+    <line x1="320" y1="320" x2="{{spdNeedle.x}}" y2="{{spdNeedle.y}}" stroke="#ff6a1a" stroke-width="9" stroke-linecap="round"></line>
+    <circle cx="320" cy="320" r="26" fill="#2c2620"></circle>
+    <text x="320" y="470" fill="#efe6d2" font-size="88" font-weight="700" text-anchor="middle">112</text>
+    <text x="320" y="512" fill="#8f8473" font-size="28" text-anchor="middle">km/h</text>
+  </svg>
+
+  <svg viewBox="0 0 640 640" width="640" height="640" style="position: absolute; right: 70px; top: 70px" role="img" aria-label="Obrotomierz: 6150 obr/min">
+    <circle cx="320" cy="320" r="306" fill="#1d1915" stroke="#2c2620" stroke-width="4"></circle>
+    <path d="{{redArc}}" fill="none" stroke="#c8321f" stroke-width="22"></path>
+    <sc-for list="{{rpmTicks}}" as="t" hint-placeholder-count="29">
+      <line x1="{{t.x1}}" y1="{{t.y1}}" x2="{{t.x2}}" y2="{{t.y2}}" stroke="{{t.c}}" stroke-width="{{t.w}}" stroke-linecap="round"></line>
+    </sc-for>
+    <sc-for list="{{rpmNums}}" as="n" hint-placeholder-count="8">
+      <text x="{{n.x}}" y="{{n.y}}" fill="{{n.c}}" font-size="40" font-weight="600" text-anchor="middle" dominant-baseline="central">{{n.label}}</text>
+    </sc-for>
+    <line x1="320" y1="320" x2="{{rpmNeedle.x}}" y2="{{rpmNeedle.y}}" stroke="#ff6a1a" stroke-width="9" stroke-linecap="round"></line>
+    <circle cx="320" cy="320" r="26" fill="#2c2620"></circle>
+    <text x="320" y="470" fill="#8f8473" font-size="28" text-anchor="middle">×1000 obr/min</text>
+  </svg>
+
+  <div style="position: absolute; left: 710px; top: 150px; width: 180px; display: flex; flex-direction: column; align-items: center; gap: 28px">
+    <div style="display: flex; gap: 10px">
+      <span style="width: 22px; height: 22px; border-radius: 50%; background: #4cc38a"></span>
+      <span style="width: 22px; height: 22px; border-radius: 50%; background: #4cc38a"></span>
+      <span style="width: 22px; height: 22px; border-radius: 50%; background: #f4a81d"></span>
+      <span style="width: 22px; height: 22px; border-radius: 50%; background: #f4a81d"></span>
+      <span style="width: 22px; height: 22px; border-radius: 50%; background: #2c2620"></span>
+    </div>
+    <div style="width: 170px; height: 220px; border: 4px solid #2c2620; border-radius: 18px; background: #0f0d0b; display: flex; align-items: center; justify-content: center; font-size: 190px; font-weight: 700; line-height: 1">3</div>
+    <div style="font-size: 26px; color: #8f8473">bieg</div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; gap: 64px; font-size: 30px; color: #8f8473">
+    <span>czas odcinka <b style="color: #efe6d2; margin-left: 8px">1:42,7</b></span>
+    <span>dystans <b style="color: #efe6d2; margin-left: 8px">2 318 m</b></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = 320, S = -135, E = 135;
+    function pol(r, deg) { var a = (deg - 90) * Math.PI / 180; return [C + r * Math.cos(a), C + r * Math.sin(a)]; }
+    function ang(v, max) { return S + (E - S) * v / max; }
+    function ticks(max, step, major, redFrom) {
+      var out = [];
+      for (var v = 0; v <= max + 1e-9; v += step) {
+        var big = Math.abs(v / major - Math.round(v / major)) < 1e-6;
+        var a = ang(v, max), p1 = pol(big ? 252 : 268, a), p2 = pol(290, a);
+        out.push({ x1: p1[0].toFixed(1), y1: p1[1].toFixed(1), x2: p2[0].toFixed(1), y2: p2[1].toFixed(1),
+          c: redFrom && v >= redFrom ? '#c8321f' : big ? '#efe6d2' : '#6d6356', w: big ? 6 : 3 });
+      }
+      return out;
+    }
+    function nums(max, major, r, redFrom, div) {
+      var out = [];
+      for (var v = 0; v <= max + 1e-9; v += major) {
+        var p = pol(r, ang(v, max));
+        out.push({ x: p[0].toFixed(1), y: p[1].toFixed(1), label: String(Math.round(v / (div || 1))), c: redFrom && v >= redFrom ? '#e0553f' : '#efe6d2' });
+      }
+      return out;
+    }
+    var red0 = pol(290, ang(6, 7)), red1 = pol(290, ang(7, 7));
+    var sn = pol(250, ang(112, 200)), rn = pol(250, ang(6.15, 7));
+    return {
+      spdTicks: ticks(200, 5, 20), spdNums: nums(200, 20, 212),
+      rpmTicks: ticks(7, 0.25, 1, 6), rpmNums: nums(7, 1, 212, 6),
+      redArc: 'M' + red0[0].toFixed(1) + ',' + red0[1].toFixed(1) + ' A290,290 0 0 1 ' + red1[0].toFixed(1) + ',' + red1[1].toFixed(1),
+      spdNeedle: { x: sn[0].toFixed(1), y: sn[1].toFixed(1) },
+      rpmNeedle: { x: rn[0].toFixed(1), y: rn[1].toFixed(1) }
+    };
+  }
+}
+</script>
+</body>
+</html>

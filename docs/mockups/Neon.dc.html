@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Neon – tylko najważniejsze</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#38e8ff}a:hover{color:#a4f4ff}
+</style>
+</helmet>
+<div style="width: 1600px; height: 800px; position: relative; overflow: hidden; background: #08070d; color: #f3f0ff; font-family: 'Unbounded', sans-serif; font-variant-numeric: tabular-nums">
+
+  <svg viewBox="0 0 640 640" width="640" height="640" style="position: absolute; left: 480px; top: 40px; filter: drop-shadow(0 0 22px rgba(255, 61, 168, .55))" role="img" aria-label="Obroty 6150 z 6580, bieg 3">
+    <defs>
+      <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#38e8ff"></stop>
+        <stop offset=".65" stop-color="#8b5cff"></stop>
+        <stop offset="1" stop-color="#ff3da8"></stop>
+      </linearGradient>
+    </defs>
+    <circle cx="320" cy="320" r="280" fill="none" stroke="#1a1726" stroke-width="26" stroke-dasharray="{{track}}" transform="rotate(135 320 320)" stroke-linecap="round"></circle>
+    <circle cx="320" cy="320" r="280" fill="none" stroke="url(#ring)" stroke-width="26" stroke-dasharray="{{fill}}" transform="rotate(135 320 320)" stroke-linecap="round"></circle>
+  </svg>
+
+  <div style="position: absolute; left: 480px; top: 150px; width: 640px; text-align: center; font-size: 380px; font-weight: 800; line-height: 1; letter-spacing: -0.04em">3</div>
+
+  <div style="position: absolute; left: 480px; top: 610px; width: 640px; display: flex; justify-content: center; align-items: baseline; gap: 18px">
+    <span style="font-size: 96px; font-weight: 500">112</span>
+    <span style="font-size: 28px; font-weight: 300; color: #8a84a6">km/h</span>
+  </div>
+
+  <div style="position: absolute; left: 90px; top: 120px; bottom: 120px; width: 6px; background: #1a1726; border-radius: 3px">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: #ff3da8; border-radius: 3px"></div>
+  </div>
+  <div style="position: absolute; right: 90px; top: 120px; bottom: 120px; width: 6px; background: #1a1726; border-radius: 3px">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 94%; background: #38e8ff; border-radius: 3px; box-shadow: 0 0 16px #38e8ff"></div>
+  </div>
+
+  <div style="position: absolute; left: 160px; top: 120px; font-size: 26px; font-weight: 300; color: #8a84a6; line-height: 1.7">
+    <div>czas</div>
+    <div style="font-size: 54px; font-weight: 500; color: #f3f0ff">1:42,7</div>
+  </div>
+  <div style="position: absolute; right: 160px; top: 120px; text-align: right; font-size: 26px; font-weight: 300; color: #8a84a6; line-height: 1.7">
+    <div>obroty</div>
+    <div style="font-size: 54px; font-weight: 500; color: #f3f0ff">6150</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var circ = 2 * Math.PI * 280, arc = circ * 0.75, frac = 6150 / 6580;
+    return {
+      track: arc.toFixed(1) + ' ' + circ.toFixed(1),
+      fill: (arc * frac).toFixed(1) + ' ' + circ.toFixed(1)
+    };
+  }
+}
+</script>
+</body>
+</html>

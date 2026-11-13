@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Odcinek – rajdowy cyfrowy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#f4a81d}a:hover{color:#ffd27a}
+</style>
+</helmet>
+<div style="width: 1600px; height: 800px; position: relative; overflow: hidden; background: #0d1418; color: #ece8de; font-family: 'Barlow Condensed', Bahnschrift, sans-serif; font-variant-numeric: tabular-nums">
+  <svg viewBox="0 0 1600 330" width="1600" height="330" style="position: absolute; left: 0; top: 0" role="img" aria-label="Obrotomierz: 6150 z 6580 obr/min">
+    <sc-for list="{{segs}}" as="s" hint-placeholder-count="46">
+      <path d="{{s.d}}" fill="{{s.fill}}"></path>
+    </sc-for>
+    <sc-for list="{{ticks}}" as="t" hint-placeholder-count="6">
+      <text x="{{t.x}}" y="{{t.y}}" fill="{{t.fill}}" font-size="30" font-weight="600" text-anchor="middle">{{t.label}}</text>
+    </sc-for>
+  </svg>
+
+  <div style="position: absolute; left: 40px; top: 300px; width: 22px; height: 400px; background: #172126; border-radius: 11px; overflow: hidden">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: #ec3a2c; border-radius: 11px"></div>
+  </div>
+  <div style="position: absolute; right: 40px; top: 300px; width: 22px; height: 400px; background: #172126; border-radius: 11px; overflow: hidden">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 94%; background: #4cc38a; border-radius: 11px"></div>
+  </div>
+
+  <div style="position: absolute; left: 110px; top: 330px; width: 420px">
+    <div style="font-size: 210px; line-height: .85; font-weight: 700">112</div>
+    <div style="font-size: 36px; color: #7d8c92; margin-top: 14px">km/h</div>
+  </div>
+
+  <div style="position: absolute; left: 540px; top: 150px; width: 520px; text-align: center; font-size: 580px; line-height: 1; font-weight: 700">3</div>
+
+  <div style="position: absolute; right: 110px; top: 330px; width: 420px; text-align: right">
+    <div style="font-size: 150px; line-height: .85; font-weight: 600; color: #c9c5bb">6150</div>
+    <div style="font-size: 36px; color: #7d8c92; margin-top: 14px">obr/min</div>
+  </div>
+
+  <div style="position: absolute; left: 110px; right: 110px; bottom: 26px; height: 64px; border-top: 2px solid #172126; padding-top: 14px; display: flex; justify-content: space-between; align-items: baseline; font-size: 36px; color: #7d8c92">
+    <span>czas <b style="color: #ece8de; font-weight: 600; margin-left: 10px">1:42,7</b></span>
+    <span>dystans <b style="color: #ece8de; font-weight: 600; margin-left: 10px">2 318 m</b></span>
+    <span style="display: flex; align-items: center; gap: 14px">
+      <span style="width: 48px; height: 48px; border: 2px solid #172126; border-radius: 50%; position: relative; display: inline-block">
+        <span style="position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #f4a81d; left: 30px; top: 12px"></span>
+      </span>
+      przeciążenie <b style="color: #ece8de; font-weight: 600; margin-left: 10px">0,8 g</b>
+    </span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var SEGS = 46, CX = 800, CY = 1650, R1 = 1430, R2 = 1530, A0 = -0.505, A1 = 0.505, SK = 0.006;
+    var rpm = 6150, max = 6580, lit = Math.round(rpm / max * SEGS);
+    function pt(r, a) { return [CX + r * Math.sin(a), CY - r * Math.cos(a)]; }
+    var segs = [];
+    for (var i = 0; i < SEGS; i++) {
+      var st = (A1 - A0) / SEGS, a = A0 + i * st, b = a + st * 0.72;
+      var p = [pt(R1, a), pt(R1, b), pt(R2, b + SK), pt(R2, a + SK)];
+      var f = (i + 1) / SEGS;
+      var col = i >= lit ? '#172126' : f >= 0.92 ? '#ec3a2c' : f >= 0.8 ? '#f4a81d' : '#ece8de';
+      segs.push({ d: 'M' + p.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join('L') + 'Z', fill: col });
+    }
+    var ticks = [];
+    for (var k = 1000; k <= max; k += 1000) {
+      var fr = k / max, ang = A0 + (A1 - A0) * fr, q = pt(R1 - 48, ang);
+      ticks.push({ x: q[0].toFixed(1), y: (q[1] + 10).toFixed(1), label: String(k / 1000), fill: fr >= 0.92 ? '#ec3a2c' : '#56656b' });
+    }
+    return { segs: segs, ticks: ticks };
+  }
+}
+</script>
+</body>
+</html>

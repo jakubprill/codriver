@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Kierownica – wyświetlacz z kokpitu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#39c6f0}a:hover{color:#8fe0f8}
+</style>
+</helmet>
+<div style="width: 1600px; height: 800px; box-sizing: border-box; padding: 34px 48px; background: #050709; color: #f5f7f8; font-family: 'Chakra Petch', sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 22px">
+
+  <div style="display: flex; justify-content: center; gap: 18px">
+    <sc-for list="{{leds}}" as="l" hint-placeholder-count="15">
+      <span style="width: 40px; height: 40px; border-radius: 50%; background: {{l.bg}}; box-shadow: {{l.glow}}"></span>
+    </sc-for>
+  </div>
+
+  <div style="position: relative; height: 130px">
+    <div style="display: flex; align-items: flex-end; gap: 6px; height: 100px">
+      <sc-for list="{{bars}}" as="b" hint-placeholder-count="60">
+        <span style="flex: 1; height: {{b.h}}; background: {{b.c}}; border-radius: 2px"></span>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 22px; color: #6f8796; margin-top: 8px">
+      <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span style="color: #ff4d3a">7</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; flex-grow: 1">
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 24px 32px; display: flex; flex-direction: column; justify-content: space-between">
+      <span style="font-size: 26px; color: #6f8796">prędkość</span>
+      <span style="font-size: 170px; font-weight: 700; line-height: .9">112</span>
+      <span style="font-size: 26px; color: #6f8796">km/h</span>
+    </div>
+    <div style="border: 3px solid #39c6f0; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 300px; font-weight: 700; line-height: 1; background: #071219">3</div>
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 24px 32px; display: flex; flex-direction: column; justify-content: space-between; text-align: right">
+      <span style="font-size: 26px; color: #6f8796">obroty</span>
+      <span style="font-size: 130px; font-weight: 600; line-height: .9">6150</span>
+      <span style="font-size: 26px; color: #6f8796">obr/min</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; height: 104px">
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 14px 24px; display: flex; flex-direction: column; justify-content: space-between">
+      <span style="font-size: 22px; color: #6f8796">czas odcinka</span>
+      <span style="font-size: 44px; font-weight: 600">1:42,7</span>
+    </div>
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 14px 24px; display: flex; flex-direction: column; justify-content: space-between">
+      <span style="font-size: 22px; color: #6f8796">dystans</span>
+      <span style="font-size: 44px; font-weight: 600">2 318 m</span>
+    </div>
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 16px 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 20px; color: #6f8796"><span style="width: 44px">gaz</span><span style="flex: 1; height: 18px; background: #14202a; border-radius: 9px; position: relative"><span style="position: absolute; left: 0; top: 0; bottom: 0; width: 94%; background: #39d98a; border-radius: 9px"></span></span></div>
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 20px; color: #6f8796"><span style="width: 44px">ham.</span><span style="flex: 1; height: 18px; background: #14202a; border-radius: 9px"></span></div>
+    </div>
+    <div style="border: 2px solid #22303a; border-radius: 14px; padding: 14px 24px; display: flex; flex-direction: column; justify-content: space-between">
+      <span style="font-size: 22px; color: #6f8796">przeciążenie</span>
+      <span style="font-size: 44px; font-weight: 600">0,8 g</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var rpm = 6150, max = 7000, redline = 6580;
+    var leds = [], litLeds = 13;
+    for (var i = 0; i < 15; i++) {
+      var c = i < 5 ? '#39d98a' : i < 10 ? '#ff4d3a' : '#3b86ff';
+      var on = i < litLeds;
+      leds.push({ bg: on ? c : '#121a20', glow: on ? '0 0 18px ' + c : 'none' });
+    }
+    var bars = [], N = 60;
+    for (var k = 0; k < N; k++) {
+      var v = (k + 1) / N * max;
+      var col = v > rpm ? '#121a20' : v >= redline * 0.93 ? '#ff4d3a' : v >= redline * 0.8 ? '#f4c21d' : '#f5f7f8';
+      bars.push({ h: (30 + 70 * (k + 1) / N).toFixed(0) + 'px', c: col });
+    }
+    return { leds: leds, bars: bars };
+  }
+}
+</script>
+</body>
+</html>
