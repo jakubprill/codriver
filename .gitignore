@@ -1,0 +1,7 @@
+node_modules/
+dist/
+src/assets.gen.js
+recordings/
+*.log
+.DS_Store
+Thumbs.db

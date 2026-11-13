@@ -1,0 +1,19 @@
+{
+  "name": "codriver",
+  "version": "0.1.0",
+  "description": "Dashboard telemetrii z gier wyścigowych na drugi monitor, telefon i tablet",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "dev": "node --watch src/main.js",
+    "replay": "node tools/replay.js test/fixtures/dirt3-2026-11-13.csv --loop",
+    "test": "node --test",
+    "build": "bun scripts/build.js",
+    "build:windows": "bun scripts/build.js --target=bun-windows-x64"
+  }
+}
