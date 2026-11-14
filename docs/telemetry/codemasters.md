@@ -37,12 +37,16 @@ What to do about it:
    and extract it to `tools\DiRTTelemetryErrorFix` in the codriver folder (with `codriver.exe`: to a `DiRTTelemetryErrorFix`
    folder next to the file, or point to it with the `CODRIVER_DIRT3_FIX` environment variable). Then the **“Launch DiRT 3”**
    button in the panel – or `codriver --launch-dirt3` – enables telemetry, raises the fix's timeout to 180 s (a cold Steam
-   start can take longer than 30 s), starts the fix and then launches the game via Steam. Windows asks for permission to
-   run the fix (UAC prompt): allow it. The game starts after the prompt is answered; if you decline, the game starts
-   without the fix and the error may come back at the finish.
+   start can take longer than 30 s), starts the fix and launches the game via Steam. The game starts right away and never
+   waits for the fix: the fix finds the game process on its own.
 
-   Both steps run as one PowerShell command (`Start-Process -Verb RunAs` for the fix, then the game). Starting an
-   elevated program with a plain `spawn()` fails, and before v0.4.1 that error stopped codriver itself.
+   The fix's manifest requires **administrator rights**. When codriver itself runs as administrator (right-click →
+   Run as administrator), it starts the fix directly. Otherwise it uses `Start-Process -Verb RunAs`, and Windows asks for
+   permission (UAC prompt) – click Yes. A plain `spawn()` of such a program fails; before v0.4.1 that error stopped
+   codriver, and in v0.4.1 the game waited for the prompt and did not start when the prompt did not show up.
+
+   The DiRT 3 card shows, every few seconds, whether the game and the fix are running – e.g. a warning when the game
+   runs without the fix.
 
    Why codriver doesn't fix this itself: the error happens inside the game's code, before the data leaves the PC.
    Fixing it requires injecting native code into the game process – that doesn't fit a lightweight, dependency-free app,

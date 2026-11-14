@@ -178,6 +178,9 @@ async function showConnect(slot) {
 async function showTelemetry(slot, note = '') {
   let st;
   try { st = await (await fetch('/api/dirt3/telemetry')).json(); } catch { return; }
+  // refresh every few seconds, so the card shows whether the game and the fix are running
+  clearTimeout(slot.refresh);
+  slot.refresh = setTimeout(() => { if (slot.isConnected) showTelemetry(slot, slot.querySelector('[role=status]')?.textContent ?? ''); }, 4000);
   if (!st.found) return;
   const on = !!st.motion?.enabled;
   const msg = h('p', { class: 'hint', role: 'status' }, note);
@@ -201,7 +204,10 @@ async function showTelemetry(slot, note = '') {
     const launch = h('button', { class: 'toggle primary', type: 'button' }, 'Launch DiRT 3');
     action(launch, async () => {
       const r = await post('/api/dirt3/launch');
-      return r.fix ? 'Allow the fix in the Windows prompt (it needs administrator rights) – then the game starts via Steam.' : 'The game is starting via Steam – without the fix, error 10038 may come back at the finish.';
+      if (!r.fix) return 'The game is starting via Steam – without the fix, error 10038 may come back at the finish.';
+      return r.fixPrompt
+        ? 'The game is starting via Steam. Windows asks to allow the fix (it needs administrator rights) – click Yes.'
+        : 'The game is starting via Steam, together with the fix.';
     });
     buttons.push(launch);
   }
@@ -212,8 +218,14 @@ async function showTelemetry(slot, note = '') {
   });
   buttons.push(toggle);
 
+  const r = st.running;
   const fix = st.fix?.found
-    ? h('p', { class: 'fix ok' }, 'Fix for “sendto failed 10038”: ready – “Launch DiRT 3” starts it with the game.')
+    ? h('p', { class: r?.game && !r.fix ? 'fix' : 'fix ok' },
+      r?.game && r.fix ? 'DiRT 3 is running, protected by the fix for “sendto failed 10038”.'
+        : r?.game ? 'DiRT 3 is running WITHOUT the fix – error 10038 may stop the game at the finish.'
+          : r?.fix ? 'Fix for “sendto failed 10038”: running, waiting for the game.'
+            : 'Fix for “sendto failed 10038”: ready – “Launch DiRT 3” starts it with the game.',
+      st.elevated === false ? h('span', { class: 'hint' }, ' Windows asks for permission each time; to skip that, start codriver with right-click → Run as administrator.') : '')
     : h('p', { class: 'fix' }, 'Fix for “sendto failed 10038”: not installed. ',
       h('a', { href: st.fix?.download, target: '_blank', rel: 'noopener' }, 'Download the ZIP'),
       ' and extract it to: ', h('code', {}, st.fix?.suggestedDir ?? ''));

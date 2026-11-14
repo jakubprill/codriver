@@ -10,7 +10,7 @@
 // The game starts only after the prompt is answered, so the prompt never hides behind a fullscreen game.
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn as nodeSpawn } from 'node:child_process';
+import { spawn as nodeSpawn, execFile as nodeExecFile } from 'node:child_process';
 import * as dirt3Config from './dirt3-config.js';
 
 export const STEAM_APP_ID = 321040; // DiRT 3 Complete Edition
@@ -57,38 +57,71 @@ export function ensureFixTimeout(fix, seconds = FIX_TIMEOUT_S) {
 /** Single-quoted PowerShell string. */
 export const psQuote = (s) => `'${String(s).replace(/'/g, "''")}'`;
 
-/** The PowerShell command that starts the fix (elevated) and then the game via Steam. */
-export function launchScript(fix, appId = STEAM_APP_ID) {
-  const game = `Start-Process ${psQuote(`steam://rungameid/${appId}`)}`;
-  if (!fix) return game;
-  // If the user declines the UAC prompt, Start-Process throws – the game still starts.
-  return `try { Start-Process -FilePath ${psQuote(fix)} -ArgumentList '-silent' -WorkingDirectory ${psQuote(path.dirname(fix))} -Verb RunAs -WindowStyle Hidden } catch {}; ${game}`;
+/** PowerShell command that starts the fix elevated (UAC prompt). */
+export function elevateScript(fix) {
+  return `Start-Process -FilePath ${psQuote(fix)} -ArgumentList '-silent' -WorkingDirectory ${psQuote(path.dirname(fix))} -Verb RunAs -WindowStyle Hidden`;
+}
+
+/** Is this process running as administrator? `net session` succeeds only with admin rights. */
+export function isElevated({ execFile = nodeExecFile, platform = process.platform } = {}) {
+  if (platform !== 'win32') return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const child = execFile('net', ['session'], { windowsHide: true }, (err) => resolve(!err));
+    child?.on?.('error', () => resolve(false));
+  });
+}
+
+/** Image names (lower case) from `tasklist /FO CSV /NH` output. */
+export function parseTasklist(out) {
+  return new Set(String(out).split(/\r?\n/).map((l) => l.match(/^"([^"]+)"/)?.[1]?.toLowerCase()).filter(Boolean));
+}
+
+/** Are the game and the fix running right now? null when it can't be checked. */
+export function runningState({ execFile = nodeExecFile, platform = process.platform } = {}) {
+  if (platform !== 'win32') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const child = execFile('tasklist', ['/FO', 'CSV', '/NH'], { windowsHide: true, maxBuffer: 4 << 20 }, (err, out) => {
+      if (err) return resolve(null);
+      const names = parseTasklist(out);
+      resolve({ game: names.has('dirt3_game.exe'), fix: names.has(FIX_EXE.toLowerCase()) });
+    });
+    child?.on?.('error', () => resolve(null));
+  });
 }
 
 /**
  * @param {object} o
  * @param {string} o.appDir      codriver folder (the repo, or the folder containing codriver.exe)
  * @param {number} [o.udpPort]
+ * @param {boolean} [o.elevated] codriver runs as administrator – start the fix directly
  * @param {Function} [o.spawn]   for tests
  * @param {string} [o.platform]  for tests
- * @returns {{ telemetry: object|null, fix: string|null, game: boolean }}
+ * @returns {{ telemetry: object|null, fix: string|null, fixPrompt: boolean, game: boolean }}
  */
-export function launchDirt3({ appDir, udpPort = 20777, spawn = nodeSpawn, platform = process.platform, configFile = dirt3Config.findConfig() }) {
+export function launchDirt3({ appDir, udpPort = 20777, elevated = false, spawn = nodeSpawn, platform = process.platform, configFile = dirt3Config.findConfig() }) {
   if (platform !== 'win32') throw new Error('Launching the game only works on Windows.');
 
   // 1. telemetry in the game settings (the game reads them at startup)
   const telemetry = configFile ? dirt3Config.applyToFile(configFile, true, udpPort).motion : null;
 
-  // 2. the fix (elevated) and 3. the game via Steam – one PowerShell command, in that order
-  const fix = findFix(appDir);
-  if (fix) ensureFixTimeout(fix);
+  // An error from a child process must never take the server down.
   const opts = { detached: true, stdio: 'ignore', windowsHide: true };
-  const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', launchScript(fix)], opts);
-  // An error from a child process must never take the server down; without PowerShell, start just the game.
-  child.on?.('error', () => {
-    spawn('cmd', ['/c', 'start', '', `steam://rungameid/${STEAM_APP_ID}`], opts).on?.('error', () => {});
-  });
-  child.unref();
+  const start = (cmd, args, o = opts) => {
+    const child = spawn(cmd, args, o);
+    child.on?.('error', () => {});
+    child.unref?.();
+  };
 
-  return { telemetry, fix, game: true };
+  // 2. the fix – it waits for the game process, so it may start before or after the game
+  const fix = findFix(appDir);
+  if (fix) {
+    ensureFixTimeout(fix);
+    if (elevated) start(fix, ['-silent'], { ...opts, cwd: path.dirname(fix) });
+    else start('powershell.exe', ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', elevateScript(fix)]);
+  }
+
+  // 3. the game via Steam – right away, never waiting for the fix
+  start('cmd', ['/c', 'start', '', `steam://rungameid/${STEAM_APP_ID}`]);
+
+  return { telemetry, fix, fixPrompt: !!fix && !elevated, game: true };
 }

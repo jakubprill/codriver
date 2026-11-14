@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { launchDirt3, launchScript, ensureFixTimeout, findFix, FIX_EXE, FIX_TIMEOUT_S, STEAM_APP_ID } from '../src/games/dirt3-launcher.js';
+import { launchDirt3, elevateScript, ensureFixTimeout, parseTasklist, runningState, isElevated, findFix, FIX_EXE, FIX_TIMEOUT_S, STEAM_APP_ID } from '../src/games/dirt3-launcher.js';
 
 const fixture = fs.readFileSync(new URL('./fixtures/dirt3-hardware_settings_config.xml', import.meta.url), 'utf8');
 
@@ -25,34 +25,61 @@ function sandbox({ withFix }) {
 /** The PowerShell -Command argument of a spawn call. */
 const script = (call) => call[call.indexOf('-Command') + 1];
 
-test('with the fix: telemetry on, the fix elevated first, then the game via Steam – one PowerShell call', () => {
+const GAME = `steam://rungameid/${STEAM_APP_ID}`;
+const startsGame = (call) => call[0] === 'cmd' && call.includes(GAME);
+
+test('not elevated: the fix through a UAC prompt, and the game starts right away, on its own', () => {
   const { dir, configFile, calls, spawn } = sandbox({ withFix: true });
   const r = launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile });
   assert.equal(r.telemetry.enabled, true);
   assert.ok(r.fix.endsWith(FIX_EXE));
-  assert.equal(calls.length, 1);
+  assert.equal(r.fixPrompt, true);
+  assert.equal(calls.length, 2);
   assert.equal(calls[0][0], 'powershell.exe');
-  const cmd = script(calls[0]);
-  const fixAt = cmd.indexOf(FIX_EXE), gameAt = cmd.indexOf(`steam://rungameid/${STEAM_APP_ID}`);
-  assert.ok(fixAt > 0 && gameAt > fixAt, 'the fix before the game');
-  assert.match(cmd, /-Verb RunAs/);
-  assert.match(cmd, /-ArgumentList '-silent'/);
+  assert.match(script(calls[0]), /-Verb RunAs/);
+  assert.match(script(calls[0]), /-ArgumentList '-silent'/);
+  assert.doesNotMatch(script(calls[0]), /steam:/, 'the game does not wait for the prompt');
+  assert.ok(startsGame(calls[1]));
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test('a failed spawn does not throw and falls back to starting just the game', () => {
-  const { dir, configFile, calls, spawn, handlers } = sandbox({ withFix: true });
-  launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile });
-  assert.equal(typeof handlers.error, 'function', 'an error handler is attached');
-  handlers.error(new Error('spawn powershell.exe ENOENT'));
-  assert.equal(calls.length, 2);
-  assert.ok(calls[1].includes(`steam://rungameid/${STEAM_APP_ID}`));
+test('elevated: the fix is started directly, without a prompt', () => {
+  const { dir, configFile, calls, spawn } = sandbox({ withFix: true });
+  const r = launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile, elevated: true });
+  assert.equal(r.fixPrompt, false);
+  assert.ok(calls[0][0].endsWith(FIX_EXE));
+  assert.deepEqual(calls[0].slice(1), ['-silent']);
+  assert.ok(startsGame(calls[1]));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('a failed spawn never throws: every child process gets an error handler', () => {
+  const { dir, configFile, spawn, handlers } = sandbox({ withFix: true });
+  launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile, elevated: true });
+  assert.equal(typeof handlers.error, 'function');
+  assert.doesNotThrow(() => handlers.error(new Error('spawn UNKNOWN')));
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('paths with apostrophes are quoted for PowerShell', () => {
-  const cmd = launchScript("C:\\Users\\o'neil\\fix\\" + FIX_EXE);
-  assert.ok(cmd.includes("o''neil"));
+  assert.ok(elevateScript("C:\\Users\\o'neil\\fix\\" + FIX_EXE).includes("o''neil"));
+});
+
+test('process list: game and fix detected from tasklist output', async () => {
+  const out = '"System Idle Process","0","Services","0","8 K"\r\n"dirt3_game.exe","4242","Console","1","1 200 000 K"\r\n"DiRTTelemetryErrorFix.exe","77","Console","1","20 000 K"\r\n';
+  assert.ok(parseTasklist(out).has('dirt3_game.exe'));
+  const execFile = (cmd, args, o, cb) => { cb(null, out); return { on() {} }; };
+  assert.deepEqual(await runningState({ execFile, platform: 'win32' }), { game: true, fix: true });
+  const none = (cmd, args, o, cb) => { cb(null, '"explorer.exe","1","Console","1","1 K"'); return { on() {} }; };
+  assert.deepEqual(await runningState({ execFile: none, platform: 'win32' }), { game: false, fix: false });
+  assert.equal(await runningState({ platform: 'linux' }), null);
+});
+
+test('elevation check: net session succeeds only as administrator', async () => {
+  const ok = (cmd, args, o, cb) => { cb(null); return { on() {} }; };
+  const denied = (cmd, args, o, cb) => { cb(new Error('Access is denied.')); return { on() {} }; };
+  assert.equal(await isElevated({ execFile: ok, platform: 'win32' }), true);
+  assert.equal(await isElevated({ execFile: denied, platform: 'win32' }), false);
 });
 
 test('without the fix the game still starts', () => {
@@ -60,8 +87,7 @@ test('without the fix the game still starts', () => {
   const r = launchDirt3({ appDir: dir, spawn, platform: 'win32', configFile });
   assert.equal(r.fix, null);
   assert.equal(calls.length, 1);
-  assert.doesNotMatch(script(calls[0]), /RunAs/);
-  assert.match(script(calls[0]), new RegExp(`steam://rungameid/${STEAM_APP_ID}`));
+  assert.ok(startsGame(calls[0]));
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

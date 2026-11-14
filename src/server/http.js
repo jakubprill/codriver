@@ -46,12 +46,12 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
     }
 
     if (url.pathname === '/api/dirt3/telemetry') {
-      handleTelemetry(req, res, udpPort, appDir);
+      handleTelemetry(req, res, udpPort, appDir).catch((e) => sendJson(res, 500, { error: e.message }));
       return;
     }
 
     if (url.pathname === '/api/dirt3/launch') {
-      handleLaunch(req, res, udpPort, appDir);
+      handleLaunch(req, res, udpPort, appDir).catch((e) => sendJson(res, 500, { error: e.message }));
       return;
     }
 
@@ -118,14 +118,23 @@ function fixInfo(appDir) {
   return { found: !!found, path: found, suggestedDir: dirt3Launcher.suggestedFixDir(appDir), download: dirt3Launcher.FIX_DOWNLOAD };
 }
 
+// Whether codriver runs as administrator – checked once; it decides how the fix is started.
+let elevated = null;
+const checkElevated = async () => (elevated ??= await dirt3Launcher.isElevated());
+
+/** Is the game / the fix running right now (Windows only), for the DiRT 3 card. */
+async function liveState() {
+  return { elevated: await checkElevated(), running: await dirt3Launcher.runningState() };
+}
+
 /** POST: enables telemetry, starts the fix (if present) and the game – from this machine only. */
-function handleLaunch(req, res, udpPort, appDir) {
+async function handleLaunch(req, res, udpPort, appDir) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Only POST is allowed' });
   if (!isLoopback(req.socket.remoteAddress)) {
     return sendJson(res, 403, { error: 'The game can only be launched on the computer running codriver.' });
   }
   try {
-    const result = dirt3Launcher.launchDirt3({ appDir, udpPort });
+    const result = dirt3Launcher.launchDirt3({ appDir, udpPort, elevated: await checkElevated() });
     sendJson(res, 200, { ...result, fixInfo: fixInfo(appDir) });
   } catch (e) {
     sendJson(res, 500, { error: e.message });
@@ -133,8 +142,10 @@ function handleLaunch(req, res, udpPort, appDir) {
 }
 
 /** GET: telemetry state in the DiRT 3 settings. POST {"enabled": bool}: change it – from this machine only. */
-function handleTelemetry(req, res, udpPort, appDir) {
-  if (req.method === 'GET') return sendJson(res, 200, { ...dirt3Config.status(udpPort), fix: fixInfo(appDir), canLaunch: process.platform === 'win32' });
+async function handleTelemetry(req, res, udpPort, appDir) {
+  if (req.method === 'GET') {
+    return sendJson(res, 200, { ...dirt3Config.status(udpPort), fix: fixInfo(appDir), canLaunch: process.platform === 'win32', ...(await liveState()) });
+  }
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Only GET and POST are allowed' });
   if (!isLoopback(req.socket.remoteAddress)) {
     return sendJson(res, 403, { error: 'Game settings can only be changed on the computer running codriver.' });
