@@ -34,6 +34,7 @@ test('not elevated: the fix through a UAC prompt, and the game starts right away
   assert.equal(r.telemetry.enabled, true);
   assert.ok(r.fix.endsWith(FIX_EXE));
   assert.equal(r.fixPrompt, true);
+  assert.equal(r.display.fullscreen, true, 'the game always starts fullscreen');
   assert.equal(calls.length, 2);
   assert.equal(calls[0][0], 'powershell.exe');
   assert.match(script(calls[0]), /-Verb RunAs/);

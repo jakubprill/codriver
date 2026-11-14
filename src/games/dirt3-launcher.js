@@ -96,13 +96,16 @@ export function runningState({ execFile = nodeExecFile, platform = process.platf
  * @param {boolean} [o.elevated] codriver runs as administrator – start the fix directly
  * @param {Function} [o.spawn]   for tests
  * @param {string} [o.platform]  for tests
- * @returns {{ telemetry: object|null, fix: string|null, fixPrompt: boolean, game: boolean }}
+ * @returns {{ telemetry: object|null, display: object|null, fix: string|null, fixPrompt: boolean, game: boolean }}
  */
 export function launchDirt3({ appDir, udpPort = 20777, elevated = false, spawn = nodeSpawn, platform = process.platform, configFile = dirt3Config.findConfig() }) {
   if (platform !== 'win32') throw new Error('Launching the game only works on Windows.');
 
-  // 1. telemetry in the game settings (the game reads them at startup)
-  const telemetry = configFile ? dirt3Config.applyToFile(configFile, true, udpPort).motion : null;
+  // 1. telemetry and fullscreen in the game settings (the game reads them at startup). The game saves its
+  //    display mode on exit and sometimes falls back to a window (e.g. after losing focus during startup),
+  //    so fullscreen is set again on every launch.
+  const applied = configFile ? dirt3Config.applyToFile(configFile, true, udpPort, { fullscreen: true }) : null;
+  const telemetry = applied?.motion ?? null;
 
   // An error from a child process must never take the server down.
   const opts = { detached: true, stdio: 'ignore', windowsHide: true };
@@ -123,5 +126,5 @@ export function launchDirt3({ appDir, udpPort = 20777, elevated = false, spawn =
   // 3. the game via Steam – right away, never waiting for the fix
   start('cmd', ['/c', 'start', '', `steam://rungameid/${STEAM_APP_ID}`]);
 
-  return { telemetry, fix, fixPrompt: !!fix && !elevated, game: true };
+  return { telemetry, display: applied?.display ?? null, fix, fixPrompt: !!fix && !elevated, game: true };
 }

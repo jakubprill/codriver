@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<hardware_settings_info>
+	<systemInfo OS=" (Build 9200)" totalMemory="16734236" winPlatformID="2" winMajorVersion="6" winMinorVersion="2" isWinXP="false" isWinVista="false" isWin7="false" rating="3" />
+	<cpu name="Intel(R) Core(TM) i5-6400 CPU @ 2.70GHz" speed="2712" cores="4" hyperThreading="false" sse2Supported="true" rating="3" />
+	<graphics_card name="NVIDIA GeForce GTX 1060 6GB" vendorId="0x10DE" deviceId="0x1C03" vs_shader="3_0" ps_shader="3_0" native_width="2560" native_height="1600" memory="4095" rating="3">
+		<resolution width="640" height="480" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="720" height="480" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="720" height="576" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="800" height="600" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1024" height="768" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1152" height="864" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1176" height="664" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="1280" height="720" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="1280" height="768" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1280" height="800" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1280" height="960" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1280" height="1024" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1360" height="768" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1366" height="768" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1440" height="900" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1440" height="1080" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="1600" height="900" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1600" height="1024" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1600" height="1200" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1680" height="1050" aspect="auto">
+			<refreshRate rate="59" />
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1768" height="992" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="1920" height="1080" aspect="auto">
+			<refreshRate rate="60" />
+			<refreshRate rate="59" />
+		</resolution>
+		<resolution width="1920" height="1200" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="1920" height="1440" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="2048" height="1536" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="2560" height="1440" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<resolution width="2560" height="1600" aspect="auto">
+			<refreshRate rate="60" />
+		</resolution>
+		<capabilities a2r10g10b10="true" fetch4="false" hardwarepcf="true">
+			<alpha_to_coverage supported="true" method="nVidia" />
+			<multisampling>
+				<mode name="off" />
+				<mode name="2xmsaa" />
+				<mode name="4xmsaa" />
+				<mode name="8xmsaa" />
+				<mode name="8xqcsaa" />
+			</multisampling>
+		</capabilities>
+	</graphics_card>
+	<audio_card audioEnabled="true">
+		<unsupported type="hardware" index="0" reverbs="1" voices="0" />
+		<mixing type="software" index="1" reverbs="1" voices="192" />
+		<unsupported type="rapture3D" index="5" reverbs="4" voices="0" />
+	</audio_card>
+</hardware_settings_info>
