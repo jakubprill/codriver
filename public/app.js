@@ -7,6 +7,7 @@ import { createStage } from './lib/stage.js';
 import { createDemo } from './lib/demo.js';
 import { themes, findTheme } from './themes/index.js';
 import { qrSvg } from './lib/qr.js';
+import { keepAwake, letSleep } from './lib/keep-awake.js';
 
 const KEY = 'codriver.theme';
 const app = document.getElementById('app');
@@ -131,6 +132,7 @@ function showDash(theme) {
     if (e.target === menu) return;
     showUi();
     goFullscreen();
+    keepAwake();
   });
   menu.addEventListener('click', () => {
     history.replaceState(null, '', '?pick' + (demo ? '&demo' : ''));
@@ -154,7 +156,8 @@ function showDash(theme) {
     };
     cleanup = () => es.close();
   }
-  stopCurrent = () => { cleanup(); clearTimeout(hideTimer); };
+  keepAwake();
+  stopCurrent = () => { cleanup(); clearTimeout(hideTimer); letSleep(); };
 }
 
 async function showConnect(slot) {
@@ -245,8 +248,6 @@ function goFullscreen() {
       .then(() => screen.orientation?.lock?.('landscape'))
       .catch(() => {});
   }
-  // screen wake lock only works on https/localhost; on plain http in a home network the browser refuses it
-  navigator.wakeLock?.request('screen').catch(() => {});
 }
 
 start();

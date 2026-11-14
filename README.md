@@ -27,6 +27,8 @@ Works with **DiRT 3**. **DiRT Rally** uses the same telemetry format – support
    The phone must be on the same Wi-Fi; when Windows asks about the firewall, allow private networks.
    Data shows up once a stage starts.
 
+   The phone's screen stays on while a dashboard is shown.
+
    `codriver.local` works on iPhone, iPad and computers; on some Android phones use the IP address from the QR code.
 
 > **DiRT 3 Complete Edition** with telemetry enabled may show a “sendto failed 10038” error at the finish line – a known game bug.
