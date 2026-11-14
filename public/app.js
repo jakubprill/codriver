@@ -61,8 +61,10 @@ function showPicker() {
   const connect = h('div');
   const telemetry = h('div');
   const status = h('div');
+  const awake = h('div');
   app.replaceChildren(h('section', { class: 'picker' },
     status,
+    awake,
     connect,
     telemetry,
     h('h1', {}, 'Choose a display'),
@@ -76,6 +78,8 @@ function showPicker() {
     stopStatus = showStatus(status);
     showConnect(connect);
     showTelemetry(telemetry);
+  } else {
+    showAwakeHelp(awake);
   }
 
   // previews render live with sample data
@@ -83,6 +87,34 @@ function showPicker() {
   const step = createDemo();
   const timer = setInterval(() => { const f = step(); views.forEach((v) => v.update(f)); }, 1000 / 20);
   stopCurrent = () => { clearInterval(timer); stopStatus(); };
+}
+
+/**
+ * On a phone or tablet over plain http the browser refuses the screen wake lock (it needs a secure
+ * context), and current Chrome on Android no longer keeps the screen on for a tiny muted video. A one-time
+ * Chrome setting makes this address count as secure – then the dashboard keeps the screen on.
+ */
+function showAwakeHelp(slot) {
+  const KEY = 'codriver.awakeHelpHidden';
+  if (window.isSecureContext || demo) return;
+  try { if (localStorage.getItem(KEY)) return; } catch { /* storage unavailable */ }
+  const origins = [...new Set(['http://codriver.local', location.origin])].join(',');
+  const value = h('textarea', { class: 'origins', readonly: '', rows: '2', 'aria-label': 'Addresses to enter' }, origins);
+  value.addEventListener('focus', () => value.select());
+  const hide = h('button', { class: 'toggle', type: 'button' }, 'Hide');
+  hide.addEventListener('click', () => {
+    try { localStorage.setItem(KEY, '1'); } catch { /* storage unavailable */ }
+    slot.replaceChildren();
+  });
+  slot.replaceChildren(h('div', { class: 'awake' },
+    h('h2', {}, 'Keep the screen on'),
+    h('p', {}, 'Over this connection the browser does not let the dashboard keep the screen on. One-time setting in Chrome on Android:'),
+    h('ol', {},
+      h('li', {}, 'Open a new tab and go to ', h('code', {}, 'chrome://flags/#unsafely-treat-insecure-origin-as-secure')),
+      h('li', {}, 'In “Insecure origins treated as secure” enter:', value),
+      h('li', {}, 'Set it to Enabled and tap Relaunch.')),
+    h('p', { class: 'hint' }, 'Other browsers: set a longer screen timeout in the device settings.'),
+    hide));
 }
 
 /** Status bar on the PC: version, whether game data is flowing, how many screens are connected. Refreshes every 2 s. */

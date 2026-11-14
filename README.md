@@ -27,7 +27,9 @@ Works with **DiRT 3**. **DiRT Rally** uses the same telemetry format – support
    The phone must be on the same Wi-Fi; when Windows asks about the firewall, allow private networks.
    Data shows up once a stage starts.
 
-   The phone's screen stays on while a dashboard is shown.
+   To keep the phone's screen on while a dashboard is shown, Chrome on Android needs a one-time setting:
+   the dashboard page explains it (`chrome://flags/#unsafely-treat-insecure-origin-as-secure` with codriver's address).
+   Browsers allow the Screen Wake Lock API only on https, and codriver runs on plain http in the home network.
 
    `codriver.local` works on iPhone, iPad and computers; on some Android phones use the IP address from the QR code.
 

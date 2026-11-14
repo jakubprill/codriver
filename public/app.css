@@ -88,3 +88,17 @@ button { font: inherit; color: inherit; }
 .statusbar .ok { color: #4cc38a; font-weight: 600; }
 .statusbar .idle { color: var(--accent); }
 .statusbar.bad { color: #ec3a2c; }
+
+/* phone/tablet over plain http: how to let the dashboard keep the screen on */
+.awake { border: 1px solid var(--accent); border-radius: 14px; padding: 18px 20px; margin: 0 0 24px; }
+.awake h2 { margin: 0 0 6px; font-size: 26px; }
+.awake p, .awake li { font-size: 18px; color: var(--muted); }
+.awake ol { padding-left: 1.3em; margin: 8px 0; }
+.awake li { margin: 6px 0; }
+.awake code { color: var(--fg, #fff); word-break: break-all; }
+.awake .origins { display: block; box-sizing: border-box; width: 100%; resize: none; overflow-wrap: anywhere; margin-top: 6px; padding: 8px 10px; font: inherit; font-size: 17px;
+  color: inherit; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); border-radius: 8px; }
+.awake .hint { font-size: 16px; }
+.awake .toggle { min-height: 44px; padding: 0 22px; border-radius: 22px; border: 2px solid var(--accent); background: transparent;
+  color: var(--accent); font-weight: 600; cursor: pointer; }
+.awake .toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
