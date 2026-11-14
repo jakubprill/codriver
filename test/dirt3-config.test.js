@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { readMotion, setMotion, isCodriverReady, applyToFile, candidatePaths, findConfig, readDisplay, nativeResolution, setFullscreen } from '../src/games/dirt3-config.js';
+import { readMotion, setMotion, isCodriverReady, applyToFile, candidatePaths, findConfig, readDisplay, nativeResolution, setFullscreen, fullscreenSize } from '../src/games/dirt3-config.js';
 
 const fixture = fs.readFileSync(new URL('./fixtures/dirt3-hardware_settings_config.xml', import.meta.url), 'utf8');
 
@@ -70,13 +70,21 @@ test('fullscreen changes only the resolution line', () => {
   assert.deepEqual(readDisplay(setFullscreen(fixture)), { width: 1280, height: 800, fullscreen: true }, 'without a size the resolution stays');
 });
 
-test('writing with fullscreen uses the info file next to the settings', () => {
+test('the resolution set in the game is kept; only an unsupported one is replaced with the native one', () => {
+  const at = (w, h) => fixture.replace(/width="\d+" height="\d+"/, `width="${w}" height="${h}"`);
+  assert.equal(fullscreenSize(at(1920, 1080), info), null, 'a Full HD choice stays');
+  assert.equal(fullscreenSize(at(2560, 1600), info), null);
+  assert.deepEqual(fullscreenSize(at(3840, 2160), info), { width: 2560, height: 1600 }, 'not supported -> native');
+  assert.equal(fullscreenSize(at(3840, 2160), null), null, 'no info file -> keep');
+});
+
+test('writing with fullscreen: windowed 1920x1080 becomes fullscreen 1920x1080', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codriver-fs-'));
   const file = path.join(dir, 'hardware_settings_config.xml');
-  fs.writeFileSync(file, fixture);
+  fs.writeFileSync(file, fixture.replace(/width="\d+" height="\d+"/, 'width="1920" height="1080"'));
   fs.writeFileSync(path.join(dir, 'hardware_settings_info.xml'), info);
   const r = applyToFile(file, true, 20777, { fullscreen: true });
-  assert.deepEqual(r.display, { width: 2560, height: 1600, fullscreen: true });
+  assert.deepEqual(r.display, { width: 1920, height: 1080, fullscreen: true });
   assert.equal(r.motion.enabled, true);
   fs.rmSync(dir, { recursive: true, force: true });
 });

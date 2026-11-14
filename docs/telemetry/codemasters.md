@@ -45,9 +45,11 @@ What to do about it:
    permission (UAC prompt) – click Yes. A plain `spawn()` of such a program fails; before v0.4.1 that error stopped
    codriver, and in v0.4.1 the game waited for the prompt and did not start when the prompt did not show up.
 
-   The same button also switches the game to **fullscreen at the screen's native resolution** (taken from
-   `hardware_settings_info.xml`, which the game writes at startup). The game saves its display mode on exit and
-   sometimes saves a windowed mode – e.g. after losing focus while starting – so codriver sets it on every launch.
+   The same button also switches the game to **fullscreen**. The game saves its display mode on exit and sometimes
+   saves a windowed mode – e.g. after losing focus while starting – so codriver sets it on every launch. The resolution
+   chosen in the game is kept; only when the game does not list it as supported (`hardware_settings_info.xml`, written
+   by the game at startup) does codriver use the screen's native one. After changing monitors, pick the resolution once
+   in the game's options.
 
    The DiRT 3 card shows, every few seconds, whether the game and the fix are running – e.g. a warning when the game
    runs without the fix.

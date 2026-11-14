@@ -80,6 +80,23 @@ export function nativeResolution(infoXml) {
   return infoXml.includes(`<resolution width="${width}" height="${height}"`) ? { width, height } : null;
 }
 
+/** Display modes the game lists as supported in hardware_settings_info.xml, as "WxH" strings. */
+export function supportedModes(infoXml) {
+  return new Set([...infoXml.matchAll(/<resolution width="(\d+)" height="(\d+)"/g)].map(([, w, h]) => `${w}x${h}`));
+}
+
+/**
+ * The resolution to use with fullscreen: the one set in the game, unless the game does not list it as
+ * supported (e.g. a smaller monitor now) – then the screen's native one. null = keep the current one.
+ * The player's choice wins, so a monitor change only needs the resolution picked once in the game.
+ */
+export function fullscreenSize(xml, infoXml) {
+  if (!infoXml) return null;
+  const d = readDisplay(xml);
+  if (!d || supportedModes(infoXml).has(`${d.width}x${d.height}`)) return null;
+  return nativeResolution(infoXml);
+}
+
 /** New file contents with fullscreen on – at `size` when given, otherwise at the current resolution. */
 export function setFullscreen(xml, size = null) {
   if (!RESOLUTION_RE.test(xml)) return xml;
@@ -93,13 +110,13 @@ export function setFullscreen(xml, size = null) {
 /**
  * Writes the change to the file. The first change makes a `.codriver-backup` copy.
  * A read-only attribute is cleared for the write and restored afterwards.
- * With `fullscreen`, also switches the game to fullscreen at the screen's native resolution.
+ * With `fullscreen`, also switches the game to fullscreen (resolution: see fullscreenSize).
  * @returns {{ path: string, motion: object, display: object|null }}
  */
 export function applyToFile(file, enabled, port = 20777, { fullscreen = false } = {}) {
   const xml = fs.readFileSync(file, 'utf8');
   let next = setMotion(xml, enabled, port);
-  if (fullscreen) next = setFullscreen(next, readNative(file));
+  if (fullscreen) next = setFullscreen(next, fullscreenSize(next, readInfo(file)));
   const backup = `${file}.codriver-backup`;
   if (!fs.existsSync(backup)) fs.copyFileSync(file, backup);
   const readOnly = (fs.statSync(file).mode & 0o200) === 0;
@@ -112,9 +129,9 @@ export function applyToFile(file, enabled, port = 20777, { fullscreen = false } 
   return { path: file, motion: readMotion(next), display: readDisplay(next) };
 }
 
-function readNative(configFile) {
+function readInfo(configFile) {
   try {
-    return nativeResolution(fs.readFileSync(path.join(path.dirname(configFile), 'hardware_settings_info.xml'), 'utf8'));
+    return fs.readFileSync(path.join(path.dirname(configFile), 'hardware_settings_info.xml'), 'utf8');
   } catch {
     return null;
   }
