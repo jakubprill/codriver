@@ -141,13 +141,26 @@ listen(HTTP_PORTS);
 function openBrowser(url) {
   const cmd = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]]
     : process.platform === 'darwin' ? ['open', [url]] : ['xdg-open', [url]];
-  import('node:child_process').then(({ spawn }) => spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true }).unref());
+  import('node:child_process').then(({ spawn }) => {
+    const child = spawn(cmd[0], cmd[1], { stdio: 'ignore', detached: true });
+    child.on('error', () => {});
+    child.unref();
+  });
 }
+
+// The dashboard must outlive any single failure (a child process that fails to start, a bad request):
+// report the error once in the console and in the title, and keep serving.
+let lastError = null;
+process.on('uncaughtException', (e) => {
+  if (lastError !== e.message) console.error(`codriver: ${e.stack || e.message}`);
+  lastError = e.message;
+});
 
 // Status goes to the window title, not the console body: writing to a Windows console in selection
 // mode (after a click into the window) pauses the whole process, while changing the title does not.
 setInterval(() => {
   const s = state.status();
   const ago = s.lastPacketAgoMs == null ? 'none' : `${Math.round(s.lastPacketAgoMs / 1000)} s ago`;
-  process.title = `codriver | packets: ${s.packets} | last: ${ago} | screens: ${clients.size}`;
+  process.title = `codriver | packets: ${s.packets} | last: ${ago} | screens: ${clients.size}` +
+    (lastError ? ` | error: ${lastError}` : '');
 }, 1000);

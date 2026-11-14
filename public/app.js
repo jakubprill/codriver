@@ -201,7 +201,7 @@ async function showTelemetry(slot, note = '') {
     const launch = h('button', { class: 'toggle primary', type: 'button' }, 'Launch DiRT 3');
     action(launch, async () => {
       const r = await post('/api/dirt3/launch');
-      return r.fix ? 'The game is starting via Steam; the fix is running in the background.' : 'The game is starting via Steam – without the fix, error 10038 may come back at the finish.';
+      return r.fix ? 'Allow the fix in the Windows prompt (it needs administrator rights) – then the game starts via Steam.' : 'The game is starting via Steam – without the fix, error 10038 may come back at the finish.';
     });
     buttons.push(launch);
   }

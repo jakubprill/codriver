@@ -30,12 +30,19 @@ What to do about it:
    The change applies from the next game launch; the first change creates a `hardware_settings_config.xml.codriver-backup` copy.
 2. **Community fix [DiRTTelemetryErrorFix](https://github.com/RoccoC/DiRTTelemetryErrorFix)** (MIT, also recommended by SimHub).
    It injects the EasyHook library into the game process and wraps `sendto`: when the game gets error 10038,
-   the fix returns a normal result instead. It waits up to 30 s for the game to start and exits on its own when the game closes.
+   the fix returns a normal result instead. It waits for the game to start (`timeout` in `DiRTTelemetryErrorFix.exe.config`,
+   30 s by default) and exits on its own when the game closes. Injecting into another process needs **administrator rights**.
 
    **With codriver:** download [DiRTTelemetryErrorFix_Release.zip](https://github.com/RoccoC/DiRTTelemetryErrorFix/blob/master/bin/DiRTTelemetryErrorFix_Release.zip?raw=true)
    and extract it to `tools\DiRTTelemetryErrorFix` in the codriver folder (with `codriver.exe`: to a `DiRTTelemetryErrorFix`
    folder next to the file, or point to it with the `CODRIVER_DIRT3_FIX` environment variable). Then the **“Launch DiRT 3”**
-   button in the panel – or `codriver --launch-dirt3` – enables telemetry, starts the fix and launches the game via Steam.
+   button in the panel – or `codriver --launch-dirt3` – enables telemetry, raises the fix's timeout to 180 s (a cold Steam
+   start can take longer than 30 s), starts the fix and then launches the game via Steam. Windows asks for permission to
+   run the fix (UAC prompt): allow it. The game starts after the prompt is answered; if you decline, the game starts
+   without the fix and the error may come back at the finish.
+
+   Both steps run as one PowerShell command (`Start-Process -Verb RunAs` for the fix, then the game). Starting an
+   elevated program with a plain `spawn()` fails, and before v0.4.1 that error stopped codriver itself.
 
    Why codriver doesn't fix this itself: the error happens inside the game's code, before the data leaves the PC.
    Fixing it requires injecting native code into the game process – that doesn't fit a lightweight, dependency-free app,

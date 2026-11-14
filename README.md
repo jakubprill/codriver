@@ -31,7 +31,7 @@ Works with **DiRT 3**. **DiRT Rally** uses the same telemetry format – support
 
 > **DiRT 3 Complete Edition** with telemetry enabled may show a “sendto failed 10038” error at the finish line – a known game bug.
 > codriver can switch telemetry off when you play without the dashboard, and its **Launch DiRT 3** button starts a community fix
-> together with the game. Details: [docs/telemetry/codemasters.md](docs/telemetry/codemasters.md).
+> together with the game (Windows asks for administrator permission for the fix). Details: [docs/telemetry/codemasters.md](docs/telemetry/codemasters.md).
 
 Without the game: `bun run replay` plays back a recorded drive, and `http://localhost/?demo` shows sample data.
 
