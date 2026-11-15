@@ -5,7 +5,7 @@ Speed, RPM, gear and shift lights – in the browser, no app to install.
 
 ![Display picker](docs/screens/picker.png)
 
-Nineteen looks to choose from; every device remembers its own.
+Thirty-four looks to choose from; every device remembers its own.
 
 | ![Stage](docs/screens/odcinek.png) | ![Halo](docs/screens/halo.png) | ![Orbit](docs/screens/orbit.png) |
 |---|---|---|

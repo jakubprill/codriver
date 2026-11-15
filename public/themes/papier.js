@@ -19,7 +19,7 @@ const CSS = `
 .t-papier .strip b { display: block; font-size: 46px; color: ${C.ink}; font-style: normal; font-weight: 600; margin-top: 2px; }
 .t-papier .ped { height: 22px; border: 2px solid ${C.ink}; margin-top: 10px; position: relative; }
 .t-papier .ped i { position: absolute; left: 0; top: 0; bottom: 0; background: ${C.ink}; }
-.t-papier .status { position: absolute; left: 0; right: 0; top: 670px; text-align: center; font-size: 30px; font-style: italic; color: ${C.grey}; }
+.t-papier .status { position: absolute; left: 0; right: 0; top: 20px; text-align: center; font-size: 30px; font-style: italic; color: ${C.grey}; }
 `;
 
 const W = 1440, BAR_H = 96;

@@ -57,9 +57,9 @@ export default {
 
     const speed = sevenSeg({ count: 3, w: 96, h: 170, gap: 22, x: 1000, y: 150, on: C.mint, ghost: 'rgba(185, 247, 216, 0.05)', skew: 0 });
     const dist = sevenSeg({ count: 5, w: 30, h: 56, gap: 10, x: 150, y: 625, on: C.mint, ghost: 'rgba(185, 247, 216, 0.05)', skew: 0 });
-    const time = sevenSeg({ count: 4, w: 30, h: 56, gap: 10, x: 560, y: 625, on: C.mint, ghost: 'rgba(185, 247, 216, 0.05)', skew: 0 });
+    const time = sevenSeg({ count: 5, w: 30, h: 56, gap: 10, x: 560, y: 625, on: C.mint, ghost: 'rgba(185, 247, 216, 0.05)', skew: 0 });
     const gear = sevenSeg({ count: 1, w: 30, h: 56, gap: 10, x: 1200, y: 625, on: C.mint, ghost: 'rgba(185, 247, 216, 0.05)', skew: 0 });
-    const colon = h('div', { class: 'k', style: 'left:631px;top:628px;color:#b9f7d8;font-size:56px' }, ':');
+    const colon = h('div', { class: 'k', style: 'left:648px;top:628px;color:#b9f7d8;font-size:56px' }, ':');
 
     const lamp = (label, color) => h('span', { style: `--c:${color}` }, label);
     const L = { thr: lamp('THR', C.green), brk: lamp('BRK', C.red), clu: lamp('CLU', C.amber), up: lamp('UP', C.amber), lim: lamp('LIM', C.red), g: lamp('G', C.green) };
@@ -69,7 +69,7 @@ export default {
       h('div', { class: 'glass' }),
       h('div', { class: 'win', style: 'left:985px;top:135px;width:410px;height:200px' }),
       h('div', { class: 'win', style: 'left:135px;top:610px;width:240px;height:86px' }),
-      h('div', { class: 'win', style: 'left:545px;top:610px;width:200px;height:86px' }),
+      h('div', { class: 'win', style: 'left:545px;top:610px;width:240px;height:86px' }),
       h('div', { class: 'win', style: 'left:1185px;top:610px;width:60px;height:86px' }),
       ramp, speed.svg, dist.svg, time.svg, gear.svg, colon,
       h('div', { class: 'k', style: 'left:130px;top:450px' }, '1/MIN × 1000'),
@@ -102,7 +102,7 @@ export default {
         speed.set(String(Math.round(f.speedKmh)));
         dist.set(String(Math.round(f.lapDistance) % 1e5));
         const t = Math.floor(f.lapTime);
-        time.set(`${String(Math.floor(t / 60) % 100).padStart(2, '0')}${String(t % 60).padStart(2, '0')}`);
+        time.set(`${String(Math.floor(t / 60) % 100).padStart(2, '0')} ${String(t % 60).padStart(2, '0')}`);
         const gt = gearText(f.gear);
         gear.set(gt === 'N' ? 'n' : gt === 'R' ? 'r' : gt);
         L.thr.classList.toggle('on', f.throttle > 0.9);

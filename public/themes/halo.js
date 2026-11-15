@@ -21,7 +21,7 @@ const CSS = `
 .t-halo .info { position: absolute; top: 110px; font-size: 24px; color: ${C.muted}; letter-spacing: .06em; line-height: 1.5; }
 .t-halo .info b { display: block; font-size: 48px; font-weight: 500; color: ${C.fg}; letter-spacing: 0; }
 .t-halo .side { position: absolute; bottom: 70px; font-size: 22px; color: ${C.muted}; letter-spacing: .1em; }
-.t-halo .status { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 26px; color: ${C.muted}; }
+.t-halo .status { position: absolute; left: 0; right: 0; top: 24px; text-align: center; font-size: 26px; color: ${C.muted}; }
 `;
 
 const CX = 420;

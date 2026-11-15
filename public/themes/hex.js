@@ -13,6 +13,7 @@ const CSS = `
 .t-hex .gear.shift { color: ${C.red}; }
 .t-hex .k { position: absolute; font-size: 20px; color: ${C.muted}; letter-spacing: .04em; }
 .t-hex .v { position: absolute; font-size: 54px; font-weight: 700; }
+.t-hex .v.small { font-size: 38px; }
 .t-hex .v.red { color: ${C.red}; font-size: 40px; }
 .t-hex .bar { position: absolute; height: 6px; background: #1d1b22; }
 .t-hex .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
@@ -49,7 +50,7 @@ export default {
     const at = (x, y, cls, text) => h('div', { class: cls, style: `left:${x}px;top:${y}px` }, text);
     const gear = h('div', { class: 'gear' }, 'N');
     const spd = at(250, 220, 'v', '0');
-    const rpm = at(250, 600, 'v', '0');
+    const rpm = at(420, 228, 'v small', '0');
     const time = at(1110, 200, 'v', '0:00.0');
     const top = at(1110, 320, 'v red', '0');
     const sprint = at(1110, 420, 'v red', '–');
@@ -62,7 +63,7 @@ export default {
     };
     const status = h('div', { class: 'status' });
     root.append(gear,
-      at(250, 196, 'k', 'km/h'), spd, at(250, 576, 'k', 'rpm'), rpm,
+      at(250, 196, 'k', 'km/h'), spd, at(420, 196, 'k', 'rpm'), rpm,
       at(1110, 176, 'k', 'stage time'), time,
       at(1110, 296, 'k', 'top speed, km/h'), top,
       at(1110, 396, 'k', '0–100 km/h'), sprint,
