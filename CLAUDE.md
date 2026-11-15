@@ -10,5 +10,7 @@
 - Every new look: an entry in `public/themes/index.js` and a screenshot `docs/screens/<id>.png` (`?demo&theme=<id>`).
 - New telemetry field: record a drive and write a test in `test/` against game data first, then the code.
 - Endpoints that change game settings or launch programs accept requests from the same machine only (`isLoopback` in `src/server/http.js`).
+  The button box (`/api/keys`) accepts the home network only (`isLanAddress`), sends only keys from `KEYS` and only while a game
+  from `GAMES` is in front (`src/input/keyboard.js`).
 - Before committing: `bun test` (or `node --test`) and `bun scripts/build.js`.
 - Releases: bump `version` in `package.json`, then Actions → Release → Run workflow; the asset is `codriver-vX.Y.Z.exe`.

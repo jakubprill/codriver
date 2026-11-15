@@ -43,6 +43,18 @@ Works with **DiRT 3**. **DiRT Rally** uses the same telemetry format – support
 
 Without the game: `bun run replay` plays back a recorded drive, and `http://localhost/?demo` shows sample data.
 
+## Button box
+
+A phone or tablet can also be a panel of extra buttons for the game: tap **Button box** in the corner of
+the dashboard (or open `?buttons`). Each key presses one keyboard key on the computer – the keypad, Esc
+or F12 – so in the game you assign it under Options › Controls by tapping the key while the game waits.
+Meant for camera, looking around, flashback, pause and the like, not for anything that belongs on the wheel.
+
+- **Edit** changes a key's name, the key it sends and how it acts: tap, held while pressed, or sent after
+  a one-second hold. Pause and restart sit under a cover: lift it, then press.
+- **Assign** makes every key send straight away (covers off), handy while binding in the game.
+- Keys are sent only on Windows, only from the home network, and only while the game window is in front.
+
 ## For developers
 
 No dependencies – all you need is [Bun](https://bun.sh) or Node 18+.

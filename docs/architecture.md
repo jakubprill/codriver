@@ -77,6 +77,8 @@ and resets it after a 5 s gap in data (new stage, different car).
 | `src/telemetry.js` | state: latest frame, learned max RPM, `live` |
 | `src/server/http.js` | files, `/events` (SSE), `/status` and `/info` (JSON), DiRT 3 endpoints |
 | `src/server/mdns.js` | mDNS answers for `codriver.local` |
+| `src/input/keyboard.js` | button box: key presses for the game (`/api/keys`) – a PowerShell/C# helper calling `SendInput` with scan codes; allowed keys only, home network only, only while the game window is in front |
+| `public/lib/buttonbox.js` | the button box page (`?buttons`): keys, covers, edit and assign modes, layout kept per device |
 | `public/lib/qr.js` | QR code generator (console and SVG), shared by the server and the browser |
 | `public/app.js` | panel on the PC, theme picker, dashboard, fullscreen, remembered theme |
 | `public/lib/` | shared: `util.js`, stage scaling `stage.js`, sample data `demo.js` |

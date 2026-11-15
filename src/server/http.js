@@ -7,6 +7,7 @@ import path from 'node:path';
 import * as dirt3Config from '../games/dirt3-config.js';
 import * as dirt3Launcher from '../games/dirt3-launcher.js';
 import { lanInterfaces } from './mdns.js';
+import { KEYS, isLanAddress, createKeyboard } from '../input/keyboard.js';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -26,7 +27,7 @@ const TYPES = {
  * @param {number} [o.udpPort]  the port the game should send data to
  * @param {string} [o.appDir]  codriver folder (where we look for the DiRT 3 fix)
  */
-export function createHttpServer({ publicDir, assets = null, state, info = () => ({}), udpPort = 20777, appDir = '.', sendHz = 30 }) {
+export function createHttpServer({ publicDir, assets = null, state, info = () => ({}), udpPort = 20777, appDir = '.', sendHz = 30, keyboard = createKeyboard() }) {
   const clients = new Set();
   const root = path.resolve(publicDir);
 
@@ -52,6 +53,11 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
 
     if (url.pathname === '/api/dirt3/launch') {
       handleLaunch(req, res, udpPort, appDir).catch((e) => sendJson(res, 500, { error: e.message }));
+      return;
+    }
+
+    if (url.pathname === '/api/keys') {
+      handleKeys(req, res, keyboard).catch((e) => sendJson(res, 500, { error: e.message }));
       return;
     }
 
@@ -93,9 +99,30 @@ export function createHttpServer({ publicDir, assets = null, state, info = () =>
     const msg = `data: ${JSON.stringify(state.snapshot())}\n\n`;
     for (const c of clients) c.write(msg);
   }, 1000 / sendHz);
-  server.on('close', () => clearInterval(timer));
+  server.on('close', () => { clearInterval(timer); keyboard.close(); });
 
   return { server, clients };
+}
+
+/**
+ * Button box. GET: the allowed keys (and starts the key helper). POST {key, action: down|up|tap}:
+ * presses a key in the game – only from the home network, only keys from the allowed list.
+ */
+async function handleKeys(req, res, keyboard) {
+  const windows = process.platform === 'win32';
+  if (req.method === 'GET') {
+    keyboard.warm();
+    return sendJson(res, 200, { keys: Object.keys(KEYS), available: windows });
+  }
+  if (req.method !== 'POST') return sendJson(res, 405, { error: 'GET or POST' });
+  if (!isLanAddress(req.socket.remoteAddress)) return sendJson(res, 403, { error: 'Only from the home network.' });
+  let body;
+  try { body = JSON.parse(await readBody(req)); } catch { return sendJson(res, 400, { error: 'Bad JSON' }); }
+  const { key, action } = body ?? {};
+  if (!Object.hasOwn(KEYS, key) || !['down', 'up', 'tap'].includes(action)) return sendJson(res, 400, { error: 'Unknown key or action' });
+  if (!windows) return sendJson(res, 501, { error: 'Sending keys only works on Windows.' });
+  const result = await keyboard[action](key);
+  return sendJson(res, 200, { result });
 }
 
 /**
@@ -106,6 +133,16 @@ function isLoopback(addr = '') {
   const a = addr.replace(/^::ffff:/, '');
   if (a === '127.0.0.1' || a === '::1') return true;
   return lanInterfaces().some((i) => i.address === a);
+}
+
+/** A small request body (key presses, switches); anything over 1 kB is cut off. */
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 1000) { req.destroy(); reject(new Error('Body too large')); } });
+    req.on('end', () => resolve(body || '{}'));
+    req.on('error', reject);
+  });
 }
 
 function sendJson(res, code, body) {

@@ -2,12 +2,14 @@
 // Every device remembers its own theme choice (localStorage).
 //
 // URL parameters:  ?theme=papier – force a theme   ?pick – show the picker   ?demo – sample data
+//                  ?buttons – the button box (keys for the game from a phone or tablet)
 import { h } from './lib/util.js';
 import { createStage } from './lib/stage.js';
 import { createDemo } from './lib/demo.js';
 import { themes, findTheme } from './themes/index.js';
 import { qrSvg } from './lib/qr.js';
 import { keepAwake, letSleep } from './lib/keep-awake.js';
+import { showButtonBox } from './lib/buttonbox.js';
 
 const KEY = 'codriver.theme';
 const app = document.getElementById('app');
@@ -31,7 +33,8 @@ async function start() {
   }
   const forced = findTheme(params.get('theme'));
   const saved = findTheme(store.get());
-  if (forced) showDash(forced);
+  if (params.has('buttons')) showButtons();
+  else if (forced) showDash(forced);
   // on the computer running codriver the start page is the panel (status, phone, DiRT 3, looks)
   else if (saved && !params.has('pick') && !isLocal) showDash(saved);
   else showPicker();
@@ -141,12 +144,25 @@ function showStatus(slot) {
   return () => clearInterval(t);
 }
 
+// ---------- button box ----------
+function showButtons() {
+  stopCurrent();
+  stopCurrent = showButtonBox(app, {
+    onBack: () => {
+      history.replaceState(null, '', location.pathname);
+      const saved = findTheme(store.get());
+      if (saved) showDash(saved); else showPicker();
+    },
+  });
+}
+
 // ---------- dashboard ----------
 function showDash(theme) {
   stopCurrent();
   const fit = h('div', { class: 'fit' });
   const menu = h('button', { class: 'menu', type: 'button' }, 'Change look');
-  const root = h('div', { class: 'dash' }, fit, menu, h('div', { class: 'rotate' }, 'Turn the device sideways for a bigger view.'));
+  const boxBtn = h('button', { class: 'menu second', type: 'button' }, 'Button box');
+  const root = h('div', { class: 'dash' }, fit, menu, boxBtn, h('div', { class: 'rotate' }, 'Turn the device sideways for a bigger view.'));
   app.replaceChildren(root);
   const stage = createStage(fit);
   const view = theme.create(stage);
@@ -161,7 +177,7 @@ function showDash(theme) {
     hideTimer = setTimeout(() => root.classList.remove('ui'), 3000);
   };
   root.addEventListener('pointerdown', (e) => {
-    if (e.target === menu) return;
+    if (e.target === menu || e.target === boxBtn) return;
     showUi();
     goFullscreen();
     keepAwake();
@@ -169,6 +185,10 @@ function showDash(theme) {
   menu.addEventListener('click', () => {
     history.replaceState(null, '', '?pick' + (demo ? '&demo' : ''));
     showPicker();
+  });
+  boxBtn.addEventListener('click', () => {
+    history.replaceState(null, '', '?buttons');
+    showButtons();
   });
 
   let cleanup;
