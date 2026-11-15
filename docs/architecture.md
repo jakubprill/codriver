@@ -61,6 +61,9 @@ and resets it after a 5 s gap in data (new stage, different car).
    ```
 2. Register it in `public/themes/index.js`.
 3. Take RPM zones from `ZONES` and `rpmInfo()` in `public/lib/util.js` so shift lights match across themes.
+   Shared drawing helpers: arcs, ring sectors, ticks and filling strokes in `public/lib/gauge.js`, seven-segment
+   digits in `public/lib/seg7.js`, stage statistics worked out on the screen (top speed, average, 0–100 km/h timer,
+   speed history) in `public/lib/stats.js`.
 4. Preview: `?demo&theme=<id>`; save a screenshot to `docs/screens/`.
 
 ## Files
